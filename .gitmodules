@@ -1,0 +1,3 @@
+[submodule "minapp"]
+	path = minapp
+	url = git@github.com:cuihairu/salon-app.git
