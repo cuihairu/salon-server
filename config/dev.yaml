@@ -1,0 +1,24 @@
+database:
+  type: "postgres"
+  dsn: "host=localhost port=5432 user=myuser password=mypassword dbname=mydb sslmode=disable"
+log:
+  level: debug
+  encoding: json
+  outputPaths:
+    - stdout
+    - logs/salon.log
+  errorOutputPaths:
+    - stderr
+  encoderConfig:
+    messageKey: message
+    levelKey: level
+    timeKey: ts
+    nameKey: logger
+    callerKey: caller
+    stacktraceKey: stacktrace
+    lineEnding: ""
+    levelEncoder: lowercase
+    timeEncoder: iso8601
+    durationEncoder: string
+    callerEncoder: short
+    nameEncoder: full
