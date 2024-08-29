@@ -4,6 +4,7 @@ go 1.23.0
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
