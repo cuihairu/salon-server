@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/cuihairu/salon/internal"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
@@ -69,6 +71,7 @@ func initLogger() {
 		os.Exit(1)
 	}
 	zapLogger, err = zapConfig.Build()
+	zapLogger.Sugar()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing logger, %s", err)
 	}
@@ -93,6 +96,8 @@ func initDatabase() error {
 	switch dbType {
 	case "mysql":
 		db, err = gorm.Open(mysql.Open(dsn), gormConfig)
+	case "sqlite":
+		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	default:
 		db, err = gorm.Open(postgres.Open(dsn), gormConfig)
 	}
@@ -111,6 +116,8 @@ var rootCmd = &cobra.Command{
 		loadConfig()
 		initLogger()
 		initDatabase()
+		app := internal.NewApp(db, zapLogger)
+		app.Start()
 	},
 }
 

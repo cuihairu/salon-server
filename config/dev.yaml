@@ -1,6 +1,6 @@
 database:
   type: "postgres"
-  dsn: "host=localhost port=5432 user=myuser password=mypassword dbname=mydb sslmode=disable"
+  dsn: "host=localhost port=5432 user=salon password=yourpassword dbname=salon sslmode=disable"
 log:
   level: debug
   encoding: json
