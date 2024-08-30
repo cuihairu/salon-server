@@ -1,6 +1,7 @@
 package starter
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -36,25 +37,25 @@ func New(v *viper.Viper) (*Config, error) {
 func (c *Config) load(v *viper.Viper) error {
 	if len(v.ConfigFileUsed()) == 0 {
 		v.SetConfigName(c.env)
-		v.AddConfigPath("./starter")
+		v.AddConfigPath("./config")
 		v.SetConfigType("yaml")
 	}
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading starter file, %s", err)
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "Using starter file:%s \n", viper.ConfigFileUsed())
+	fmt.Fprintf(os.Stdout, "Using config file:%s \n", v.ConfigFileUsed())
 	return nil
 }
 
 func (c *Config) GetDbConfig() (*DatabaseConfig, error) {
-	dbType := c.v.GetString("database.type")
-	dsn := c.v.GetString("database.dsn")
-	dbConf := &DatabaseConfig{
-		DbType: dbType,
-		DSN:    dsn,
+	dbViperConf := c.v.Sub("database")
+	if dbViperConf == nil {
+		return nil, errors.New("database config not found")
 	}
-	return dbConf, nil
+	dbConf := &DatabaseConfig{}
+	err := dbViperConf.Unmarshal(dbConf)
+	return dbConf, err
 }
 
 func (c *Config) GetEnv() string {
@@ -64,7 +65,7 @@ func (c *Config) GetEnv() string {
 func (c *Config) GetZapConfig() (*zap.Config, error) {
 	logConfig := viper.Sub("log")
 	zapConfig := zap.NewProductionConfig()
-	if logConfig != nil {
+	if logConfig == nil {
 		zapConfig.OutputPaths = append(zapConfig.OutputPaths, "logs/salon.log")
 	} else {
 		if err := logConfig.Unmarshal(&zapConfig); err != nil {

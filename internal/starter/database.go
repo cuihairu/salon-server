@@ -1,6 +1,7 @@
 package starter
 
 import (
+	"github.com/cuihairu/salon/internal/data"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -12,8 +13,9 @@ import (
 )
 
 type DatabaseConfig struct {
-	DbType string `yaml:"db_type" json:"db_type"`
-	DSN    string `yaml:"dsn" json:"dsn"`
+	DbType      string `yaml:"db_type" json:"db_type"`
+	DSN         string `yaml:"dsn" json:"dsn"`
+	AutoMigrate bool   `yaml:"auto_migrate" json:"auto_migrate"`
 }
 
 func NewDb(dbConf *DatabaseConfig) (*gorm.DB, error) {
@@ -40,5 +42,15 @@ func NewDb(dbConf *DatabaseConfig) (*gorm.DB, error) {
 	default:
 		db, err = gorm.Open(postgres.Open(dbConf.DSN), gormConfig)
 	}
+	if err != nil {
+		return nil, err
+	}
+	if dbConf.AutoMigrate {
+		err = AutoMigrate(db)
+	}
 	return db, err
+}
+
+func AutoMigrate(db *gorm.DB) error {
+	return db.AutoMigrate(&data.User{}, &data.Account{}, &data.Member{}, &data.Order{}, &data.Service{}, &data.Admin{})
 }
