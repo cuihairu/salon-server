@@ -10,6 +10,7 @@ import (
 const (
 	DEV  = "dev"
 	PROD = "prod"
+	TEST = "test"
 )
 
 type Config struct {
@@ -21,6 +22,8 @@ func New(v *viper.Viper) (*Config, error) {
 	env := os.Getenv("APP_ENV")
 	switch env {
 	case DEV:
+	case TEST:
+		env = TEST
 	case PROD:
 		env = PROD
 	default:
@@ -31,6 +34,18 @@ func New(v *viper.Viper) (*Config, error) {
 		env: env,
 	}
 	return c, c.load(v)
+}
+
+func (c *Config) IsDev() bool {
+	return c.env == DEV
+}
+
+func (c *Config) IsTest() bool {
+	return c.env == TEST
+}
+
+func (c *Config) IsProd() bool {
+	return c.env == PROD
 }
 
 func (c *Config) load(v *viper.Viper) error {
@@ -74,4 +89,16 @@ func (c *Config) GetZapConfig() (*zap.Config, error) {
 		zapConfig.OutputPaths = append(zapConfig.OutputPaths, "logs/salon.log")
 	}
 	return &zapConfig, nil
+}
+
+func (c *Config) GetMiniappConfig() (*MiniappConfig, error) {
+	config := &MiniappConfig{}
+	err := c.v.UnmarshalKey("miniapp", config)
+	return config, err
+}
+
+func (c *Config) GetServerConfig() (*ServerConfig, error) {
+	serverConfig := &ServerConfig{}
+	err := c.v.UnmarshalKey("server", serverConfig)
+	return serverConfig, err
 }

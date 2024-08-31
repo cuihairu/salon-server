@@ -2,29 +2,18 @@ package starter
 
 import (
 	"fmt"
-	"github.com/fvbock/endless"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"net/http"
 	"sync"
-	"time"
 )
 
-type Server interface {
-	ListenAndServe() error
-}
-
 type App struct {
-	conf       *Config
+	config     *Config
 	db         *gorm.DB
 	logger     *zap.Logger
 	lock       sync.RWMutex
-	httpServer Server
-}
-
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World!")
+	httpServer *HttpServer
 }
 
 func NewApp(v *viper.Viper) (*App, error) {
@@ -49,18 +38,12 @@ func NewApp(v *viper.Viper) (*App, error) {
 		return nil, err
 	}
 	app := &App{
-		conf:   conf,
+		config: conf,
 		logger: logger,
 		db:     database,
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", helloHandler)
-	server := endless.NewServer(":8080", mux)
-	server.ReadTimeout = 10 * time.Second
-	server.WriteTimeout = 10 * time.Second
-	server.MaxHeaderBytes = 1 << 20
-	app.httpServer = server
-	return app, nil
+	app.httpServer, err = NewHttpServer(conf, database, logger)
+	return app, err
 }
 
 func (a *App) Run() error {

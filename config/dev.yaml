@@ -11,3 +11,11 @@ log:
   level: debug
   outputPaths:
     - logs/salon.log
+
+miniapp:
+  wechat:
+    app_id: "xxxx"
+    app_secret: "aaaaaa"
+
+server:
+  address: ":9080"

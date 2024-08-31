@@ -1,7 +1,7 @@
 package starter
 
 import (
-	"github.com/cuihairu/salon/internal/data"
+	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/mysql"
@@ -119,5 +119,5 @@ func NewDb(dbConf *DatabaseConfig) (*gorm.DB, error) {
 }
 
 func AutoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(&data.User{}, &data.Account{}, &data.Member{}, &data.Order{}, &data.Service{}, &data.Admin{})
+	return db.AutoMigrate(&model.User{}, &model.Account{}, &model.Member{}, &model.Order{}, &model.Service{}, &model.Admin{})
 }

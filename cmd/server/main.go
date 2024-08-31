@@ -5,17 +5,12 @@ import (
 	"github.com/cuihairu/salon/internal/starter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"os"
 )
 
 var (
 	cfgFile string
 	version = "0.1.0"
-
-	zapLogger *zap.Logger
-	db        *gorm.DB
 )
 
 var rootCmd = &cobra.Command{
@@ -35,7 +30,7 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "starter", "c", "", "starter file (default is based on APP_ENV)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config (default is based on APP_ENV)")
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
