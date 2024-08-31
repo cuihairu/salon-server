@@ -1,7 +1,6 @@
 package starter
 
 import (
-	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
 	"github.com/cuihairu/salon/internal/controller"
 	"github.com/cuihairu/salon/internal/data"
@@ -9,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"net/http"
 	"time"
 )
 
@@ -26,14 +24,41 @@ type Controller interface {
 }
 
 type HttpServer struct {
-	server   Server
-	logger   *zap.Logger
-	serveMux *http.ServeMux
-	config   *Config
+	server Server
+	logger *zap.Logger
+	config *Config
 }
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World!")
+func NewApiRouter(router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
+	apiGroup := router.Group("/api")
+	userRepo := data.NewUserRepository(db)
+	userBiz := biz.NewUserBiz(userRepo)
+	userApi := controller.NewUserAPI(userBiz)
+	userApi.RegisterRoutes(apiGroup)
+	return apiGroup, nil
+}
+
+func NewAdminRouter(router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
+	apiGroup := router.Group("/admin")
+	userRepo := data.NewUserRepository(db)
+	userBiz := biz.NewUserBiz(userRepo)
+	userApi := controller.NewUserAPI(userBiz)
+	userApi.RegisterRoutes(apiGroup)
+	return apiGroup, nil
+}
+func NewRouter(config *Config, db *gorm.DB, logger *zap.Logger) (*gin.Engine, error) {
+	// api
+	router := gin.Default()
+	_, err := NewApiRouter(router, db, logger)
+	if err != nil {
+		return nil, err
+	}
+	// admin
+	_, err = NewAdminRouter(router, db, logger)
+	if err != nil {
+		return nil, err
+	}
+	return router, nil
 }
 
 func NewHttpServer(config *Config, db *gorm.DB, logger *zap.Logger) (*HttpServer, error) {
@@ -41,7 +66,6 @@ func NewHttpServer(config *Config, db *gorm.DB, logger *zap.Logger) (*HttpServer
 	if err != nil {
 		return nil, err
 	}
-	mux := http.NewServeMux()
 	if config.IsDev() {
 		gin.SetMode(gin.DebugMode)
 	} else if config.IsTest() {
@@ -49,21 +73,18 @@ func NewHttpServer(config *Config, db *gorm.DB, logger *zap.Logger) (*HttpServer
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	apiRouter := gin.New()
-	userRepo := data.NewUserRepository(db)
-	userBiz := biz.NewUserBiz(userRepo)
-	userApi := controller.NewUserAPI(userBiz)
-	userApi.RegisterRoutes(apiRouter)
-	mux.HandleFunc("/status", helloHandler)
-	server := endless.NewServer(serverConfig.Address, mux)
+	router, err := NewRouter(config, db, logger)
+	if err != nil {
+		return nil, err
+	}
+	server := endless.NewServer(serverConfig.Address, router)
 	server.ReadTimeout = 10 * time.Second
 	server.WriteTimeout = 10 * time.Second
 	server.MaxHeaderBytes = 1 << 23
 	return &HttpServer{
-		server:   server,
-		serveMux: mux,
-		logger:   logger,
-		config:   config,
+		server: server,
+		logger: logger,
+		config: config,
 	}, nil
 }
 

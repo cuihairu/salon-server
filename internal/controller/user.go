@@ -18,8 +18,8 @@ func NewUserAPI(userBiz *biz.UserBiz) *UserAPI {
 	}
 }
 
-func (api *UserAPI) RegisterRoutes(router *gin.Engine) {
-	userGroup := router.Group("/api/v1/users")
+func (api *UserAPI) RegisterRoutes(router *gin.RouterGroup) {
+	userGroup := router.Group("/users")
 	{
 		userGroup.POST("/", api.CreateUser)
 		userGroup.GET("/:id", api.GetUserByID)
