@@ -34,7 +34,7 @@ func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger
 	userApi := controller.NewUserAPI(userBiz, logger)
 	userApi.RegisterRoutes(apiGroup)
 	// auth
-	authBiz := biz.NewAuth(userRepo, logger)
+	authBiz := biz.NewAuth(config, userRepo, logger)
 	authApi := controller.NewAuthAPI(config, userBiz, authBiz, logger)
 	authApi.RegisterRoutes(apiGroup)
 	return apiGroup, nil

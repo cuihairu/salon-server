@@ -19,3 +19,9 @@ type DatabaseConfig struct {
 	AutoMigrate bool         `mapstructure:"auto_migrate" yaml:"auto_migrate" json:"auto_migrate"`
 	Log         SQLLogConfig `mapstructure:"log" yaml:"log" json:"log"`
 }
+
+func (c *Config) GetDbConfig() (*DatabaseConfig, error) {
+	dbConf := &DatabaseConfig{}
+	err := c.v.UnmarshalKey("database", dbConf)
+	return dbConf, err
+}

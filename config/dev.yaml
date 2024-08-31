@@ -12,6 +12,10 @@ log:
   outputPaths:
     - logs/salon.log
 
+jwt:
+  secret_key: "somerandomsecret"
+  expire: "168h"
+
 miniapp:
   wechat:
     app_id: "xxxx"

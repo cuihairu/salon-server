@@ -8,3 +8,9 @@ type WechatConfig struct {
 type MiniappConfig struct {
 	Wechat WechatConfig `mapstructure:"wechat" yaml:"wechat" json:"wechat"`
 }
+
+func (c *Config) GetMiniappConfig() (*MiniappConfig, error) {
+	config := &MiniappConfig{}
+	err := c.v.UnmarshalKey("miniapp", config)
+	return config, err
+}
