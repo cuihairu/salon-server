@@ -7,6 +7,7 @@ import (
 
 type JWT struct {
 	SigningKey []byte
+	expire     time.Duration
 }
 
 type Claims struct {
@@ -14,13 +15,18 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func NewJWT(key string) *JWT {
+func NewJWT(key string, expire time.Duration) *JWT {
 	return &JWT{
 		SigningKey: []byte(key),
+		expire:     expire,
 	}
 }
 
-func (j *JWT) GenerateToken(userID uint, expire time.Duration) (string, error) {
+func (j *JWT) GenerateToken(userID uint) (string, error) {
+	return j.GenerateTokenWithExpire(userID, j.expire)
+}
+
+func (j *JWT) GenerateTokenWithExpire(userID uint, expire time.Duration) (string, error) {
 	nowTime := time.Now()
 	if expire <= 5*time.Second {
 		expire = 7 * 24 * time.Hour

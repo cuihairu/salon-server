@@ -5,6 +5,7 @@ import (
 	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/controller"
 	"github.com/cuihairu/salon/internal/data"
+	"github.com/cuihairu/salon/internal/utils"
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -28,13 +29,20 @@ type HttpServer struct {
 
 func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
 	apiGroup := router.Group("/api")
+	//data
+	data, err := data.NewData(db, config, logger)
+	if err != nil {
+		return nil, err
+	}
+	// services
+	jwtConfig := config.GetJwtConfig()
+	jwtService := utils.NewJWT(jwtConfig.SecretKey, jwtConfig.Expire)
 	// users
-	userRepo := data.NewUserRepository(db)
-	userBiz := biz.NewUserBiz(userRepo, logger)
+	userBiz := biz.NewUserBiz(data.UserRepo, logger)
 	userApi := controller.NewUserAPI(userBiz, logger)
 	userApi.RegisterRoutes(apiGroup)
 	// auth
-	authBiz := biz.NewAuth(config, userRepo, logger)
+	authBiz := biz.NewAuth(config, jwtService, data.UserRepo, logger)
 	authApi := controller.NewAuthAPI(config, userBiz, authBiz, logger)
 	authApi.RegisterRoutes(apiGroup)
 	return apiGroup, nil
