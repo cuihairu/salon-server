@@ -1,7 +1,6 @@
 package starter
 
 import (
-	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -49,12 +48,8 @@ func (c *Config) load(v *viper.Viper) error {
 }
 
 func (c *Config) GetDbConfig() (*DatabaseConfig, error) {
-	dbViperConf := c.v.Sub("database")
-	if dbViperConf == nil {
-		return nil, errors.New("database config not found")
-	}
 	dbConf := &DatabaseConfig{}
-	err := dbViperConf.Unmarshal(dbConf)
+	err := c.v.UnmarshalKey("database", dbConf)
 	return dbConf, err
 }
 
@@ -63,15 +58,20 @@ func (c *Config) GetEnv() string {
 }
 
 func (c *Config) GetZapConfig() (*zap.Config, error) {
-	logConfig := viper.Sub("log")
 	zapConfig := zap.NewProductionConfig()
-	if logConfig == nil {
-		zapConfig.OutputPaths = append(zapConfig.OutputPaths, "logs/salon.log")
-	} else {
-		if err := logConfig.Unmarshal(&zapConfig); err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading log starter file, %s", err)
+	if c.v.IsSet("log") {
+		level := c.v.GetString("log.level")
+		atomicLevel, err := zap.ParseAtomicLevel(level)
+		if err != nil {
 			return nil, err
 		}
+		zapConfig.Level = atomicLevel
+		outputPaths := c.v.GetStringSlice("log.outputPaths")
+		for _, outputPath := range outputPaths {
+			zapConfig.OutputPaths = append(zapConfig.OutputPaths, outputPath)
+		}
+	} else {
+		zapConfig.OutputPaths = append(zapConfig.OutputPaths, "logs/salon.log")
 	}
 	return &zapConfig, nil
 }
