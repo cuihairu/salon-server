@@ -2,6 +2,7 @@ package starter
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/controller"
 	"github.com/cuihairu/salon/internal/data"
 	"github.com/fvbock/endless"
@@ -10,10 +11,6 @@ import (
 	"gorm.io/gorm"
 	"time"
 )
-
-type ServerConfig struct {
-	Address string `mapstructure:"address" yaml:"address" json:"address"`
-}
 
 type Server interface {
 	ListenAndServe() error
@@ -26,52 +23,57 @@ type Controller interface {
 type HttpServer struct {
 	server Server
 	logger *zap.Logger
-	config *Config
+	config *config.Config
 }
 
-func NewApiRouter(router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
+func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
 	apiGroup := router.Group("/api")
+	// users
 	userRepo := data.NewUserRepository(db)
-	userBiz := biz.NewUserBiz(userRepo)
-	userApi := controller.NewUserAPI(userBiz)
+	userBiz := biz.NewUserBiz(userRepo, logger)
+	userApi := controller.NewUserAPI(userBiz, logger)
 	userApi.RegisterRoutes(apiGroup)
+	// auth
+	authBiz := biz.NewAuth(userRepo, logger)
+	authApi := controller.NewAuthAPI(config, userBiz, authBiz, logger)
+	authApi.RegisterRoutes(apiGroup)
 	return apiGroup, nil
 }
 
-func NewAdminRouter(router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
+func NewAdminRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
 	apiGroup := router.Group("/admin")
 	userRepo := data.NewUserRepository(db)
-	userBiz := biz.NewUserBiz(userRepo)
-	userApi := controller.NewUserAPI(userBiz)
+	userBiz := biz.NewUserBiz(userRepo, logger)
+	userApi := controller.NewUserAPI(userBiz, logger)
 	userApi.RegisterRoutes(apiGroup)
 	return apiGroup, nil
 }
-func NewRouter(config *Config, db *gorm.DB, logger *zap.Logger) (*gin.Engine, error) {
-	// api
-	router := gin.Default()
-	_, err := NewApiRouter(router, db, logger)
-	if err != nil {
-		return nil, err
-	}
-	// admin
-	_, err = NewAdminRouter(router, db, logger)
-	if err != nil {
-		return nil, err
-	}
-	return router, nil
-}
-
-func NewHttpServer(config *Config, db *gorm.DB, logger *zap.Logger) (*HttpServer, error) {
-	serverConfig, err := config.GetServerConfig()
-	if err != nil {
-		return nil, err
-	}
+func NewRouter(config *config.Config, db *gorm.DB, logger *zap.Logger) (*gin.Engine, error) {
 	if config.IsDev() {
 		gin.SetMode(gin.DebugMode)
 	} else if config.IsTest() {
 		gin.SetMode(gin.TestMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
+	}
+	// api
+	router := gin.Default()
+	_, err := NewApiRouter(config, router, db, logger)
+	if err != nil {
+		return nil, err
+	}
+	// admin
+	_, err = NewAdminRouter(config, router, db, logger)
+	if err != nil {
+		return nil, err
+	}
+	return router, nil
+}
+
+func NewHttpServer(config *config.Config, db *gorm.DB, logger *zap.Logger) (*HttpServer, error) {
+	serverConfig, err := config.GetServerConfig()
+	if err != nil {
+		return nil, err
 	}
 	router, err := NewRouter(config, db, logger)
 	if err != nil {

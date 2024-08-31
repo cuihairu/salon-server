@@ -2,6 +2,7 @@ package starter
 
 import (
 	"fmt"
+	config2 "github.com/cuihairu/salon/internal/config"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -9,7 +10,7 @@ import (
 )
 
 type App struct {
-	config     *Config
+	config     *config2.Config
 	db         *gorm.DB
 	logger     *zap.Logger
 	lock       sync.RWMutex
@@ -17,7 +18,7 @@ type App struct {
 }
 
 func NewApp(v *viper.Viper) (*App, error) {
-	conf, err := New(v)
+	conf, err := config2.New(v)
 	if err != nil {
 		return nil, err
 	}

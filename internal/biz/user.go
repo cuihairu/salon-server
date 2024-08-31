@@ -3,15 +3,18 @@ package biz
 import (
 	"github.com/cuihairu/salon/internal/data"
 	"github.com/cuihairu/salon/internal/model"
+	"go.uber.org/zap"
 )
 
 type UserBiz struct {
 	userRepo *data.UserRepository
+	logger   *zap.Logger
 }
 
-func NewUserBiz(repo *data.UserRepository) *UserBiz {
+func NewUserBiz(repo *data.UserRepository, logger *zap.Logger) *UserBiz {
 	return &UserBiz{
 		userRepo: repo,
+		logger:   logger,
 	}
 }
 

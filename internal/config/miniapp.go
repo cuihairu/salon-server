@@ -1,4 +1,4 @@
-package starter
+package config
 
 type WechatConfig struct {
 	AppID     string `mapstructure:"app_id" yaml:"app_id" json:"app_id"`

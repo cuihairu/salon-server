@@ -5,16 +5,19 @@ import (
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 )
 
 type UserAPI struct {
 	userBiz *biz.UserBiz
+	logger  *zap.Logger
 }
 
-func NewUserAPI(userBiz *biz.UserBiz) *UserAPI {
+func NewUserAPI(userBiz *biz.UserBiz, logger *zap.Logger) *UserAPI {
 	return &UserAPI{
 		userBiz: userBiz,
+		logger:  logger,
 	}
 }
 
