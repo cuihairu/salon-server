@@ -48,6 +48,7 @@ func (a *AdminBiz) createDefaultAdmin(password string) (*model.Admin, error) {
 	}
 	admin := &model.Admin{
 		Name:     "admin",
+		Role:     "admin", // manager , publisher, supporter, user
 		Password: passwordHash,
 		Salt:     saltHash,
 	}

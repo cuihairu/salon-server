@@ -32,6 +32,16 @@ func (api *UserAPI) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
+// @Summary Create a new user
+// @Description Create a new user
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param user body model.User true "User"
+// @Success 201 {object} model.User
+// @Failure 400 {object} utils.HTTPError
+// @Failure 500 {object} utils.HTTPError
+// @Router /users/ [post]
 func (api *UserAPI) CreateUser(c *gin.Context) {
 	var user model.User
 	if err := c.BindJSON(&user); err != nil {

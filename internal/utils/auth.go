@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/argon2"
+	"strings"
 )
 
 const (
@@ -21,7 +22,11 @@ func SetHeaderToken(c *gin.Context, token string) {
 }
 
 func GetHeaderToken(c *gin.Context) string {
-	return c.GetHeader(AuthorizationKey)
+	authToken := c.GetHeader(AuthorizationKey)
+	if authToken == "" || !strings.HasPrefix(authToken, AuthorizationPrefix) {
+		return ""
+	}
+	return strings.TrimPrefix(authToken, "Bearer ")
 }
 
 // GenerateRandomSaltWithSize generates a random salt with the given size.
