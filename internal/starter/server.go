@@ -5,8 +5,11 @@ import (
 	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/controller"
 	"github.com/cuihairu/salon/internal/data"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/fvbock/endless"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -27,36 +30,45 @@ type HttpServer struct {
 	config *config.Config
 }
 
-func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
+func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, jwtService *utils.JWT, logger *zap.Logger) (*gin.RouterGroup, error) {
 	apiGroup := router.Group("/api")
 	//data
 	data, err := data.NewData(db, config, logger)
 	if err != nil {
 		return nil, err
 	}
-	// services
-	jwtConfig := config.GetJwtConfig()
-	jwtService := utils.NewJWT(jwtConfig.SecretKey, jwtConfig.Expire)
 	// users
 	userBiz := biz.NewUserBiz(data.UserRepo, logger)
 	userApi := controller.NewUserAPI(userBiz, logger)
 	userApi.RegisterRoutes(apiGroup)
 	// auth
-	authBiz := biz.NewAuth(config, jwtService, data.UserRepo, logger)
+	authBiz := biz.NewAuthBiz(config, jwtService, data.UserRepo, logger)
 	authApi := controller.NewAuthAPI(config, userBiz, authBiz, logger)
 	authApi.RegisterRoutes(apiGroup)
+	// admin
+	adminBiz := biz.NewAdminBiz(config, jwtService, data.AdminRepo, logger)
+	adminApi := controller.NewAdminAPI(config, adminBiz, logger)
+	adminApi.RegisterRoutes(apiGroup)
 	return apiGroup, nil
 }
 
-func NewAdminRouter(config *config.Config, router *gin.Engine, db *gorm.DB, logger *zap.Logger) (*gin.RouterGroup, error) {
-	apiGroup := router.Group("/admin")
-	userRepo := data.NewUserRepository(db)
-	userBiz := biz.NewUserBiz(userRepo, logger)
-	userApi := controller.NewUserAPI(userBiz, logger)
-	userApi.RegisterRoutes(apiGroup)
-	return apiGroup, nil
+var noAuthRoutes = map[string]map[string]bool{
+	"GET": {
+		"/about": true,
+	},
+	"POST": {
+		"/api/auth/login":  true,
+		"/api/admin/login": true,
+	},
 }
-func NewRouter(config *config.Config, db *gorm.DB, logger *zap.Logger) (*gin.Engine, error) {
+
+func NewRouter(config *config.Config, db *gorm.DB, redisStore redis.Store, logger *zap.Logger) (*gin.Engine, error) {
+	// services
+	jwtConfig := config.GetJwtConfig()
+	jwtService := utils.NewJWT(jwtConfig.SecretKey, jwtConfig.Expire)
+	// api
+	router := gin.Default()
+	router.Use(sessions.Sessions("session", redisStore), middleware.AuthRequired(noAuthRoutes, jwtService))
 	if config.IsDev() {
 		gin.SetMode(gin.DebugMode)
 	} else if config.IsTest() {
@@ -64,26 +76,19 @@ func NewRouter(config *config.Config, db *gorm.DB, logger *zap.Logger) (*gin.Eng
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	// api
-	router := gin.Default()
-	_, err := NewApiRouter(config, router, db, logger)
-	if err != nil {
-		return nil, err
-	}
-	// admin
-	_, err = NewAdminRouter(config, router, db, logger)
+	_, err := NewApiRouter(config, router, db, jwtService, logger)
 	if err != nil {
 		return nil, err
 	}
 	return router, nil
 }
 
-func NewHttpServer(config *config.Config, db *gorm.DB, logger *zap.Logger) (*HttpServer, error) {
+func NewHttpServer(config *config.Config, db *gorm.DB, redisStore redis.Store, logger *zap.Logger) (*HttpServer, error) {
 	serverConfig, err := config.GetServerConfig()
 	if err != nil {
 		return nil, err
 	}
-	router, err := NewRouter(config, db, logger)
+	router, err := NewRouter(config, db, redisStore, logger)
 	if err != nil {
 		return nil, err
 	}

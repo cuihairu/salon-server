@@ -38,12 +38,20 @@ func NewApp(v *viper.Viper) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	redisConfig, err := conf.GetRedisConfig()
+	if err != nil {
+		return nil, err
+	}
+	redis, err := NewRedis(redisConfig)
+	if err != nil {
+		return nil, err
+	}
 	app := &App{
 		config: conf,
 		logger: logger,
 		db:     database,
 	}
-	app.httpServer, err = NewHttpServer(conf, database, logger)
+	app.httpServer, err = NewHttpServer(conf, database, redis, logger)
 	return app, err
 }
 

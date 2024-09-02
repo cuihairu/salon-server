@@ -22,5 +22,3 @@ func NewAuthBiz(config *config.Config, jwtService *utils.JWT, userRepo *data.Use
 		jwtService: jwtService,
 	}
 }
-
-func

@@ -12,6 +12,11 @@ log:
   outputPaths:
     - logs/salon.log
 
+redis:
+  address: "127.0.0.1:6379"
+  password: ""
+  db: 0
+  secret: "somerandomsecret"
 jwt:
   secret_key: "somerandomsecret"
   expire: "168h"

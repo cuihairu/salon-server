@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"sync"
 	"time"
 )
 
@@ -16,11 +18,21 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+func (c *Claims) SessionKey() string {
+	return fmt.Sprintf("%s:%d", c.Group, c.UserID)
+}
+
+var one sync.Once
+
 func NewJWT(key string, expire time.Duration) *JWT {
-	return &JWT{
-		SigningKey: []byte(key),
-		expire:     expire,
-	}
+	var j *JWT
+	one.Do(func() {
+		j = &JWT{
+			SigningKey: []byte(key),
+			expire:     expire,
+		}
+	})
+	return j
 }
 
 func (j *JWT) GenerateToken(userID uint) (string, error) {
@@ -55,11 +67,11 @@ func (j *JWT) ParseToken(token string) (*Claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.SigningKey, nil
 	})
-
-	if tokenClaims != nil {
-		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
-			return claims, nil
-		}
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	if tokenClaims == nil || !tokenClaims.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+	return tokenClaims.Claims.(*Claims), nil
 }

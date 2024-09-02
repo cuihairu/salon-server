@@ -6,11 +6,13 @@ import (
 )
 
 const (
-	saltSize    = 16
-	keySize     = 32
-	timeCost    = 1
-	memoryCost  = 64 * 1024
-	parallelism = 4
+	saltSize            = 16
+	keySize             = 32
+	timeCost            = 1
+	memoryCost          = 64 * 1024
+	parallelism         = 4
+	AuthorizationKey    = "Authorization"
+	AuthorizationPrefix = "Bearer "
 )
 
 // GenerateRandomSaltWithSize generates a random salt with the given size.
