@@ -11,7 +11,8 @@ type JWT struct {
 }
 
 type Claims struct {
-	UserID uint `json:"user_id"`
+	UserID uint   `json:"user_id"`
+	Group  string `json:"group"`
 	jwt.StandardClaims
 }
 
@@ -23,10 +24,14 @@ func NewJWT(key string, expire time.Duration) *JWT {
 }
 
 func (j *JWT) GenerateToken(userID uint) (string, error) {
-	return j.GenerateTokenWithExpire(userID, j.expire)
+	return j.GenerateTokenWithGroup(userID, "user")
 }
 
-func (j *JWT) GenerateTokenWithExpire(userID uint, expire time.Duration) (string, error) {
+func (j *JWT) GenerateTokenWithGroup(userID uint, group string) (string, error) {
+	return j.GenerateTokenWithExpire(userID, group, j.expire)
+}
+
+func (j *JWT) GenerateTokenWithExpire(userID uint, group string, expire time.Duration) (string, error) {
 	nowTime := time.Now()
 	if expire <= 5*time.Second {
 		expire = 7 * 24 * time.Hour
@@ -35,6 +40,7 @@ func (j *JWT) GenerateTokenWithExpire(userID uint, expire time.Duration) (string
 
 	claims := Claims{
 		UserID: userID,
+		Group:  group,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			IssuedAt:  nowTime.Unix(),

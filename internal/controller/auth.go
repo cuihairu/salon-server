@@ -9,12 +9,12 @@ import (
 
 type AuthAPI struct {
 	userBiz *biz.UserBiz
-	authBiz *biz.Auth
+	authBiz *biz.AuthBiz
 	logger  *zap.Logger
 	config  *config.Config
 }
 
-func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.Auth, logger *zap.Logger) *AuthAPI {
+func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.AuthBiz, logger *zap.Logger) *AuthAPI {
 	return &AuthAPI{
 		userBiz: userBiz,
 		authBiz: authBiz,
@@ -26,13 +26,14 @@ func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.Auth, 
 func (api *AuthAPI) RegisterRoutes(router *gin.RouterGroup) {
 	userGroup := router.Group("/auth")
 	{
-		userGroup.POST("/login", api.Login)
-		userGroup.POST("/logout", api.Logout)
+		userGroup.POST("/login/:ty", api.Login)
+		userGroup.POST("/logout/:ty", api.Logout)
 	}
 }
 
 func (api *AuthAPI) Login(c *gin.Context) {
-
+	loginType := c.Param("ty")
+	api.logger.Info("login", zap.String("type", loginType))
 }
 
 func (api *AuthAPI) Logout(c *gin.Context) {

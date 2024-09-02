@@ -7,18 +7,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type Auth struct {
+type AuthBiz struct {
 	userRepo   *data.UserRepository
 	logger     *zap.Logger
 	config     *config.Config
 	jwtService *utils.JWT
 }
 
-func NewAuth(config *config.Config, jwtService *utils.JWT, userRepo *data.UserRepository, logger *zap.Logger) *Auth {
-	return &Auth{
+func NewAuthBiz(config *config.Config, jwtService *utils.JWT, userRepo *data.UserRepository, logger *zap.Logger) *AuthBiz {
+	return &AuthBiz{
 		config:     config,
 		userRepo:   userRepo,
 		logger:     logger,
 		jwtService: jwtService,
 	}
 }
+
+func
