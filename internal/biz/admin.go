@@ -25,8 +25,8 @@ func NewAdminBiz(config *config.Config, jwtService *utils.JWT, adminRepo *data.A
 	}
 }
 
-func (a *AdminBiz) RefreshJwt(username string) (string, error) {
-	admin, err := a.adminRepo.FindByName(username)
+func (a *AdminBiz) RefreshJwt(id uint) (string, error) {
+	admin, err := a.adminRepo.FindByID(id)
 	if err != nil {
 		return "", err
 	}
@@ -90,28 +90,24 @@ func (a *AdminBiz) Auth(username string, password string) (string, *model.Admin,
 	return token, admin, nil
 }
 
-func (a *AdminBiz) UpdatePassword(username string, newPassword string) (string, error) {
-	a.logger.Info("admin login", zap.String("username", username))
-	admin, err := a.adminRepo.FindByName(username)
+func (a *AdminBiz) UpdatePassword(id uint, newPassword string) error {
+	a.logger.Info("admin login", zap.Uint("user id", id))
+	admin, err := a.adminRepo.FindByID(id)
 	if err != nil {
-		return "", err
+		return err
 	}
 	if admin == nil {
-		return "", fmt.Errorf("admin not found")
+		return fmt.Errorf("admin not found")
 	}
 	passwordHash, saltHash, err := utils.GeneratePasswordHash(newPassword)
 	if err != nil {
-		return "", err
+		return err
 	}
 	admin.Password = passwordHash
 	admin.Salt = saltHash
-	err = a.adminRepo.Update(admin)
-	if err != nil {
-		return "", err
-	}
-	token, err := a.jwtService.GenerateTokenWithGroup(admin.ID, "admin")
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+	return a.adminRepo.Update(admin)
+}
+
+func (a *AdminBiz) GetAllAdmins() ([]model.Admin, error) {
+	return a.adminRepo.FindAll()
 }

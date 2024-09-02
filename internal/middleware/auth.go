@@ -15,26 +15,24 @@ func AuthRequired(noAuthRoutes map[string]map[string]bool, jwtService *utils.JWT
 				return
 			}
 		}
-		token := c.GetHeader(utils.AuthorizationKey)
+		token := utils.GetHeaderToken(c)
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			c.Abort()
 			return
 		}
 
 		claims, err := jwtService.ParseToken(token)
 		if err != nil || claims == nil || claims.UserID == 0 || claims.Group == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			c.Abort()
 			return
 		}
 		session := sessions.Default(c)
-		oldToken := session.Get(claims.SessionKey())
+		oldToken := session.Get("token")
 		if oldToken == nil || oldToken.(string) != token {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			c.Abort()
 			return
 		}
+		utils.SetClaimsToContext(c, claims)
 		c.Next()
 	}
 }

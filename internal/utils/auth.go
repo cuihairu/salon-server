@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/rand"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -14,6 +15,14 @@ const (
 	AuthorizationKey    = "Authorization"
 	AuthorizationPrefix = "Bearer "
 )
+
+func SetHeaderToken(c *gin.Context, token string) {
+	c.Header(AuthorizationKey, AuthorizationPrefix+token)
+}
+
+func GetHeaderToken(c *gin.Context) string {
+	return c.GetHeader(AuthorizationKey)
+}
 
 // GenerateRandomSaltWithSize generates a random salt with the given size.
 //

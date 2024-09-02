@@ -3,8 +3,14 @@ package utils
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"sync"
 	"time"
+)
+
+const (
+	ClaimsKey = "claims"
 )
 
 type JWT struct {
@@ -18,8 +24,29 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+func GetClaimsFormContext(c *gin.Context) (*Claims, bool) {
+	claims, ok := c.Get(ClaimsKey)
+	return claims.(*Claims), ok
+}
+
+func MustGetClaimsFormContext(c *gin.Context) (*Claims, bool) {
+	claims, ok := GetClaimsFormContext(c)
+	if !ok || claims == nil || claims.UserID == 0 || claims.Group == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	}
+	return claims, ok
+}
+
+func SetClaimsToContext(c *gin.Context, claims *Claims) {
+	c.Set(ClaimsKey, claims)
+}
+
 func (c *Claims) SessionKey() string {
 	return fmt.Sprintf("%s:%d", c.Group, c.UserID)
+}
+
+func (c *Claims) IsAdmin() bool {
+	return c.Group == "admin"
 }
 
 var one sync.Once
