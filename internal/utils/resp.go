@@ -75,7 +75,7 @@ func (c *Context) Success(data any) {
 func (c *Context) OK() {
 	c.JSON(http.StatusOK, Resp{
 		ErrorCode:    0,
-		ErrorMessage: "",
+		ErrorMessage: "ok",
 		Success:      true,
 		Data:         gin.H{},
 		Total:        0,

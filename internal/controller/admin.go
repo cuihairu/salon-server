@@ -191,30 +191,32 @@ type UpdatePasswordReq struct {
 }
 
 func (a *AdminAPI) UpdatePassword(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	var req UpdatePasswordReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.Error(err)
 		return
 	}
-	claims, ok := utils.MustGetClaimsFormContext(c)
+	claims, ok := ctx.Claims()
 	if !ok {
 		return
 	}
 	err = a.adminBiz.UpdatePassword(claims.UserID, req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	ctx.OK()
 	return
 }
 
 func (a *AdminAPI) GetAllAdmins(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	admins, err := a.adminBiz.GetAllAdmins()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, admins)
+	ctx.Success(admins)
 }

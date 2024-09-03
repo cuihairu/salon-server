@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -35,16 +36,17 @@ func (a *AccountAPI) GetAccountInfo(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	ctx := utils.NewContext(c)
 	account, err := a.accountBiz.GetAccountInfo(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
 	if account == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "account not found"})
+		ctx.NotFound(fmt.Errorf("account not found"))
 		return
 	}
-	c.JSON(http.StatusOK, account)
+	ctx.Success(account)
 }
 
 func (a *AccountAPI) GetAllAccounts(c *gin.Context) {

@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/cuihairu/salon/internal/biz"
 	"github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -26,16 +27,19 @@ func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.AuthBi
 func (api *AuthAPI) RegisterRoutes(router *gin.RouterGroup) {
 	userGroup := router.Group("/auth")
 	{
-		userGroup.POST("/login/:ty", api.Login)
-		userGroup.POST("/logout/:ty", api.Logout)
+		userGroup.POST("/login", api.Login)
+		userGroup.POST("/logout", api.Logout)
 	}
 }
 
 func (api *AuthAPI) Login(c *gin.Context) {
-	loginType := c.Param("ty")
-	api.logger.Info("login", zap.String("type", loginType))
+	ctx := utils.NewContext(c)
+	//api.logger.Info("login", zap.String("type", loginType))
+	ctx.OK()
 }
 
 func (api *AuthAPI) Logout(c *gin.Context) {
-
+	ctx := utils.NewContext(c)
+	ctx.Session().Clear()
+	ctx.OK()
 }
