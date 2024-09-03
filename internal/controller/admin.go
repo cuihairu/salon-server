@@ -35,8 +35,17 @@ func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 type LoginReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	AutoLogin bool   `json:"autoLogin"`
+	Type      string `json:"type"`
+}
+
+type LoginRes struct {
+	Status           string `json:"status"`
+	Type             string `json:"type"`
+	CurrentAuthority string `json:"currentAuthority"`
+	Token            string `json:"token"`
 }
 
 func (a *AdminAPI) Login(c *gin.Context) {
@@ -58,9 +67,21 @@ func (a *AdminAPI) Login(c *gin.Context) {
 		return
 	}
 	utils.SetHeaderToken(c, token)
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	var res LoginRes
+	res.Token = token
+	res.CurrentAuthority = "admin"
+	res.Type = "account"
+	res.Status = "ok"
+	c.JSON(http.StatusOK, res)
 }
 
+func (a *AdminAPI) Current(c *gin.Context) {
+	claims, ok := utils.MustGetClaimsFormContext(c)
+	if !ok {
+		return
+	}
+	c.JSON(http.StatusOK, claims)
+}
 func (a *AdminAPI) Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
