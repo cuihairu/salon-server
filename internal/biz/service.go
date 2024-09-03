@@ -7,8 +7,9 @@ import (
 )
 
 type ServiceBiz struct {
-	serviceRepo *data.ServiceRepository
-	logger      *zap.Logger
+	categoryRepo *data.CategoryRepository
+	serviceRepo  *data.ServiceRepository
+	logger       *zap.Logger
 }
 
 func NewServiceBiz(serviceRepo *data.ServiceRepository, logger *zap.Logger) *ServiceBiz {
@@ -19,7 +20,19 @@ func NewServiceBiz(serviceRepo *data.ServiceRepository, logger *zap.Logger) *Ser
 }
 
 func (biz *ServiceBiz) GetAllServices() ([]model.Service, error) {
-	return biz.serviceRepo.FindAll()
+	all, err := biz.serviceRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	categoryNameMap, err := biz.categoryRepo.GetCategoryNameMap()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range all {
+		v.CategoryName = categoryNameMap[v.CategoryId]
+	}
+	return all, nil
 }
 
 func (biz *ServiceBiz) GetServiceByID(id uint) (*model.Service, error) {
@@ -28,4 +41,12 @@ func (biz *ServiceBiz) GetServiceByID(id uint) (*model.Service, error) {
 
 func (biz *ServiceBiz) CreateService(service *model.Service) error {
 	return biz.serviceRepo.Create(service)
+}
+
+func (biz *ServiceBiz) UpdateService(service *model.Service) error {
+	return biz.serviceRepo.Update(service)
+}
+
+func (biz *ServiceBiz) DeleteService(id uint) error {
+	return biz.serviceRepo.Delete(id)
 }

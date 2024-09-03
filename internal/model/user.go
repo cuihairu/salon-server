@@ -7,11 +7,11 @@ import (
 
 type User struct {
 	gorm.Model
-	WechatId *string `gorm:"uniqueIndex"`
-	AlipayId *string `gorm:"uniqueIndex"`
-	DouYinId *string `gorm:"uniqueIndex"`
-	Name     string
-	Phone    *string `gorm:"uniqueIndex"`
-	Birthday *time.Time
-	Address  *string
+	WechatId *string    `gorm:"uniqueIndex" json:"wechat_id,omitempty"`
+	AlipayId *string    `gorm:"uniqueIndex" json:"alipay_id,omitempty"`
+	DouyinId *string    `gorm:"uniqueIndex" json:"douyin_id,omitempty"`
+	Name     string     `json:"name"`
+	Phone    *string    `gorm:"uniqueIndex" json:"phone,omitempty"`
+	Birthday *time.Time `json:"birthday,omitempty"`
+	Address  *string    `json:"address,omitempty"`
 }

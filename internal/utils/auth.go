@@ -78,8 +78,7 @@ func GeneratePasswordHash(password string) ([]byte, []byte, error) {
 // The given salt is used to generate the hash.
 // It returns true if the password matches, false otherwise.
 func VerifyPassword(hashedPassword []byte, password []byte, salt []byte) bool {
-	hash := argon2.IDKey(password, salt, timeCost, memoryCost, parallelism, keySize)
 	// To verify, regenerate the hash with the same salt and compare
 	verifyHash := argon2.IDKey(password, salt, timeCost, memoryCost, parallelism, keySize)
-	return string(hash) == string(verifyHash)
+	return string(hashedPassword) == string(verifyHash)
 }

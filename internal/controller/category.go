@@ -41,7 +41,7 @@ func (api *CategoryAPI) GetAllCategories(c *gin.Context) {
 func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {
 	id, err := utils.ParseUintParam[uint](c, "id")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	category, err := api.categoryBiz.GetCategoryByID(id)
@@ -53,7 +53,6 @@ func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {
 }
 
 func (api *CategoryAPI) CreateCategory(c *gin.Context) {
-
 	var category model.Category
 	if err := c.BindJSON(&category); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

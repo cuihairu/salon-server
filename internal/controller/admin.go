@@ -27,7 +27,7 @@ func NewAdminAPI(config *config.Config, adminBiz *biz.AdminBiz, logger *zap.Logg
 func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {
 	adminGroup := router.Group("/admin")
 	{
-		adminGroup.GET("/jwt/refresh", a.RefreshJwt)
+		adminGroup.GET("/token/refresh", a.RefreshJwt)
 		adminGroup.POST("/login", a.Login)
 		adminGroup.POST("/logout", a.Logout)
 		adminGroup.POST("/password", a.UpdatePassword)

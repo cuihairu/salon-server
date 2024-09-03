@@ -4,6 +4,6 @@ import "gorm.io/gorm"
 
 type Member struct {
 	gorm.Model
-	Level  uint
-	Points uint64
+	Level  uint   `json:"level"`
+	Points uint64 `json:"points"`
 }

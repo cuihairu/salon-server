@@ -45,6 +45,26 @@ func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, jwtSer
 	authBiz := biz.NewAuthBiz(config, jwtService, data.UserRepo, logger)
 	authApi := controller.NewAuthAPI(config, userBiz, authBiz, logger)
 	authApi.RegisterRoutes(apiGroup)
+	// category
+	categoryBiz := biz.NewCategoryBiz(data.CategoryRepo, logger)
+	categoryApi := controller.NewCategoryAPI(categoryBiz, logger)
+	categoryApi.RegisterRoutes(apiGroup)
+	// service
+	serviceBiz := biz.NewServiceBiz(data.ServiceRepo, logger)
+	serviceApi := controller.NewServiceAPI(serviceBiz, logger)
+	serviceApi.RegisterRoutes(apiGroup)
+	// account
+	accountBiz := biz.NewAccountBiz(data.AccountRepo, logger)
+	accountApi := controller.NewAccountAPI(accountBiz, logger)
+	accountApi.RegisterRoutes(apiGroup)
+	// order
+	orderBiz := biz.NewOrderBiz(data.OrderRepo, logger)
+	orderApi := controller.NewOrderAPI(orderBiz, logger)
+	orderApi.RegisterRoutes(apiGroup)
+	// member
+	memberBiz := biz.NewMemberBiz(data.MemberRepo, logger)
+	memberApi := controller.NewMemberAPI(memberBiz, logger)
+	memberApi.RegisterRoutes(apiGroup)
 	// admin
 	adminBiz := biz.NewAdminBiz(config, jwtService, data.AdminRepo, logger)
 	adminApi := controller.NewAdminAPI(config, adminBiz, logger)

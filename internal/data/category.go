@@ -15,3 +15,15 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 		Repository: utils.NewRepository[model.Category](db),
 	}
 }
+
+func (c *CategoryRepository) GetCategoryNameMap() (map[uint]string, error) {
+	all, err := c.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var result = make(map[uint]string)
+	for _, v := range all {
+		result[v.ID] = v.Name
+	}
+	return result, nil
+}
