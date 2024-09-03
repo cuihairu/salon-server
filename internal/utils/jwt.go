@@ -26,13 +26,21 @@ type Claims struct {
 
 func GetClaimsFormContext(c *gin.Context) (*Claims, bool) {
 	claims, ok := c.Get(ClaimsKey)
-	return claims.(*Claims), ok
+	if !ok {
+		return nil, false
+	}
+	cl, ok := claims.(*Claims)
+	if !ok {
+		return nil, false
+	}
+	return cl, true
 }
 
 func MustGetClaimsFormContext(c *gin.Context) (*Claims, bool) {
 	claims, ok := GetClaimsFormContext(c)
 	if !ok || claims == nil || claims.UserID == 0 || claims.Group == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized", "errorCode": http.StatusUnauthorized})
+		return nil, false
 	}
 	return claims, ok
 }

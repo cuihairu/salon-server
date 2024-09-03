@@ -4,6 +4,7 @@ import "go.uber.org/zap"
 
 type LoggingConfig struct {
 	Level       string   `mapstructure:"level" json:"level" yaml:"level"`
+	Path        string   `mapstructure:"path" json:"path" yaml:"path"`
 	OutputPaths []string `mapstructure:"outputPaths" json:"outputPaths" yaml:"outputPaths"`
 }
 

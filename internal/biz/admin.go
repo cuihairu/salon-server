@@ -112,3 +112,7 @@ func (a *AdminBiz) UpdatePassword(id uint, newPassword string) error {
 func (a *AdminBiz) GetAllAdmins() ([]model.Admin, error) {
 	return a.adminRepo.FindAll()
 }
+
+func (a *AdminBiz) GetAdmin(id uint) (*model.Admin, error) {
+	return a.adminRepo.FindByID(id)
+}
