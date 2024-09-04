@@ -66,12 +66,19 @@ var noAuthRoutes = map[string]map[string]bool{
 	},
 }
 
-var adminRoutes = map[string]string{
-	"/api/admin/current":       "",
-	"/api/admin/logout":        "",
-	"/api/admin/token/refresh": "",
-	"/api/admin/password":      "",
-	"/api/admin/login":         "",
+var adminRoutes = map[string]map[string]string{
+	"GET": {
+		"/api/admin/current":       "",
+		"/api/admin/token/refresh": "",
+	},
+	"POST": {
+		"/api/admin/login":    "",
+		"/api/admin/logout":   "",
+		"/api/admin/password": "",
+		"/api/category/":      "",
+	},
+	"PUT":    {},
+	"DELETE": {},
 }
 
 func NewRouter(config *config.Config, db *gorm.DB, redisStore redis.Store, logger *zap.Logger) (*gin.Engine, error) {

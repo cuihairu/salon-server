@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func AuthRequired(noAuthRoutes map[string]map[string]bool, adminRoutes map[string]string, jwtService *utils.JWT, logger *zap.Logger) gin.HandlerFunc {
+func AuthRequired(noAuthRoutes map[string]map[string]bool, adminRoutes map[string]map[string]string, jwtService *utils.JWT, logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if paths, methodExists := noAuthRoutes[c.Request.Method]; methodExists {
 			if skipAuth := paths[c.Request.URL.Path]; skipAuth {
@@ -18,26 +18,32 @@ func AuthRequired(noAuthRoutes map[string]map[string]bool, adminRoutes map[strin
 		}
 		token := utils.GetHeaderToken(c)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
+			c.Abort()
 			return
 		}
 
 		claims, err := jwtService.ParseToken(token)
 		if err != nil || claims == nil || claims.UserID == 0 || claims.Group == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
+			c.Abort()
 			return
 		}
 		if claims.IsAdmin() {
-			if _, ok := adminRoutes[c.Request.URL.Path]; !ok {
-				logger.Error("unauthorized try admin", zap.String("path", c.Request.URL.Path))
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-				return
+			if paths, methodExists := adminRoutes[c.Request.Method]; methodExists {
+				if _, needAdmin := paths[c.Request.URL.Path]; !needAdmin {
+					logger.Error("unauthorized try admin", zap.String("path", c.Request.URL.Path))
+					c.JSON(http.StatusForbidden, gin.H{"errorMessage": "forbidden"})
+					c.Abort()
+					return
+				}
 			}
 		}
 		session := sessions.Default(c)
 		oldToken := session.Get("token")
 		if oldToken == nil || oldToken.(string) != token {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
+			c.Abort()
 			return
 		}
 		utils.SetClaimsToContext(c, claims)

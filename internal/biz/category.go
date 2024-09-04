@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"fmt"
 	"github.com/cuihairu/salon/internal/data"
 	"github.com/cuihairu/salon/internal/model"
 	"go.uber.org/zap"
@@ -30,7 +31,15 @@ func (c *CategoryBiz) CreateCategory(category *model.Category) error {
 	return c.categoryRepo.Create(category)
 }
 
-func (c *CategoryBiz) UpdateCategory(category *model.Category) error {
+func (c *CategoryBiz) UpdateCategory(id uint, category *model.Category) error {
+	preCategory, err := c.categoryRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if preCategory == nil {
+		return fmt.Errorf("category not found")
+	}
+	category.ID = id
 	return c.categoryRepo.Update(category)
 }
 

@@ -6,12 +6,15 @@ import (
 	"net/http"
 )
 
-type Resp struct {
+type ErrorResponse struct {
 	ErrorCode    int    `json:"errorCode"`    // 业务约定的错误码
 	ErrorMessage string `json:"errorMessage"` // 业务约定的错误信息
 	Success      bool   `json:"success"`      // 业务上是否请求成功
-	Data         any    `json:"data"`         // 正常的数据
-	Total        int    `json:"total"`        // 总数 只有让 data 为 List 生效
+}
+
+type RespList struct {
+	Data  any `json:"data"`  // 正常的数据
+	Total int `json:"total"` // 总数 只有让 data 为 List 生效
 }
 
 type Context struct {
@@ -63,101 +66,69 @@ func (c *Context) IsAdmin() bool {
 }
 
 func (c *Context) Success(data any) {
-	c.JSON(http.StatusOK, Resp{
-		ErrorCode:    0,
-		ErrorMessage: "",
-		Success:      true,
-		Data:         data,
-		Total:        0,
-	})
+	c.JSON(http.StatusOK, data)
 }
 
 func (c *Context) OK() {
-	c.JSON(http.StatusOK, Resp{
-		ErrorCode:    0,
-		ErrorMessage: "ok",
-		Success:      true,
-		Data:         gin.H{},
-		Total:        0,
-	})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (c *Context) ReturnList(l any, total int) {
-	c.JSON(http.StatusOK, Resp{
-		ErrorCode:    0,
-		ErrorMessage: "",
-		Success:      true,
-		Data:         l,
-		Total:        total,
-	})
+	c.JSON(http.StatusOK, RespList{Data: l, Total: total})
 }
 
 func (c *Context) Fail(errorCode int, errorMessage string) {
-	c.JSON(http.StatusUnprocessableEntity, Resp{
+	c.JSON(http.StatusUnprocessableEntity, ErrorResponse{
 		ErrorCode:    errorCode,
 		ErrorMessage: errorMessage,
 		Success:      true,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) Error(err error) {
-	c.JSON(http.StatusUnprocessableEntity, Resp{
+	c.JSON(http.StatusUnprocessableEntity, ErrorResponse{
 		ErrorCode:    http.StatusUnprocessableEntity,
 		ErrorMessage: err.Error(),
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) BadRequest(err error) {
-	c.JSON(http.StatusBadRequest, Resp{
+	c.JSON(http.StatusBadRequest, ErrorResponse{
 		ErrorCode:    http.StatusBadRequest,
 		ErrorMessage: err.Error(),
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) NotFound(err error) {
-	c.JSON(http.StatusNotFound, Resp{
+	c.JSON(http.StatusNotFound, ErrorResponse{
 		ErrorCode:    http.StatusNotFound,
 		ErrorMessage: err.Error(),
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) Unauthorized() {
-	c.JSON(http.StatusUnauthorized, Resp{
+	c.JSON(http.StatusUnauthorized, ErrorResponse{
 		ErrorCode:    http.StatusUnauthorized,
 		ErrorMessage: "unauthorized",
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) Forbidden() {
-	c.JSON(http.StatusForbidden, Resp{
+	c.JSON(http.StatusForbidden, ErrorResponse{
 		ErrorCode:    http.StatusForbidden,
 		ErrorMessage: "forbidden",
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
 
 func (c *Context) ServerError(err error) {
-	c.JSON(http.StatusInternalServerError, Resp{
+	c.JSON(http.StatusInternalServerError, ErrorResponse{
 		ErrorCode:    http.StatusInternalServerError,
 		ErrorMessage: err.Error(),
 		Success:      false,
-		Data:         nil,
-		Total:        0,
 	})
 }
