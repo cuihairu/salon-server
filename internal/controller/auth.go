@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/cuihairu/salon/internal/biz"
 	"github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -27,8 +28,8 @@ func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.AuthBi
 func (api *AuthAPI) RegisterRoutes(router *gin.RouterGroup) {
 	userGroup := router.Group("/auth")
 	{
-		userGroup.POST("/login", api.Login)
-		userGroup.POST("/logout", api.Logout)
+		userGroup.POST("/login", middleware.RequiredRole(middleware.Anonymous), api.Login)
+		userGroup.POST("/logout", middleware.RequiredRole(middleware.Admin), api.Logout)
 	}
 }
 

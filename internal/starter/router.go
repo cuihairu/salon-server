@@ -56,38 +56,13 @@ func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, jwtSer
 	return apiGroup, nil
 }
 
-var noAuthRoutes = map[string]map[string]bool{
-	"GET": {
-		"/about": true,
-	},
-	"POST": {
-		"/api/auth/login":  true,
-		"/api/admin/login": true,
-	},
-}
-
-var adminRoutes = map[string]map[string]string{
-	"GET": {
-		"/api/admin/current":       "",
-		"/api/admin/token/refresh": "",
-	},
-	"POST": {
-		"/api/admin/login":    "",
-		"/api/admin/logout":   "",
-		"/api/admin/password": "",
-		"/api/category/":      "",
-	},
-	"PUT":    {},
-	"DELETE": {},
-}
-
 func NewRouter(config *config.Config, db *gorm.DB, redisStore redis.Store, logger *zap.Logger) (*gin.Engine, error) {
 	// services
 	jwtConfig := config.GetJwtConfig()
 	jwtService := utils.NewJWT(jwtConfig.SecretKey, jwtConfig.Expire)
 	// api
 	router := gin.Default()
-	router.Use(sessions.Sessions("session", redisStore), middleware.AuthRequired(noAuthRoutes, adminRoutes, jwtService, logger))
+	router.Use(sessions.Sessions("session", redisStore), middleware.TokenRequired(jwtService, logger))
 	if config.IsDev() {
 		gin.SetMode(gin.DebugMode)
 	} else if config.IsTest() {

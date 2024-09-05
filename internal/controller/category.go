@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func (api *CategoryAPI) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		//categoryGroup.GET("/", api.GetAllCategories)
 		//categoryGroup.GET("/:id", api.GetCategoryByID)
-		categoryGroup.POST("/", api.CreateCategory)
+		categoryGroup.POST("/", middleware.RequiredRole(middleware.Admin), api.CreateCategory)
 		//categoryGroup.PUT("/:id", api.UpdateCategory)
 		//categoryGroup.DELETE("/:id", api.DeleteCategory)
 	}

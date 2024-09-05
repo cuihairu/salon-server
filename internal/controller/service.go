@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -24,11 +25,11 @@ func NewServiceAPI(serviceBiz *biz.ServiceBiz, logger *zap.Logger) *ServiceAPI {
 func (s *ServiceAPI) RegisterRoutes(router *gin.RouterGroup) {
 	serviceGroup := router.Group("/services")
 	{
-		serviceGroup.GET("/", s.GetAllServices)
-		serviceGroup.GET("/:id", s.GetServicesByID)
-		serviceGroup.POST("/", s.CreateService)
-		serviceGroup.PUT("/:id", s.UpdateService)
-		serviceGroup.DELETE("/:id", s.DeleteService)
+		serviceGroup.GET("/", middleware.RequiredRole(middleware.Admin), s.GetAllServices)
+		serviceGroup.GET("/:id", middleware.RequiredRole(middleware.Admin), s.GetServicesByID)
+		serviceGroup.POST("/", middleware.RequiredRole(middleware.Admin), s.CreateService)
+		serviceGroup.PUT("/:id", middleware.RequiredRole(middleware.Admin), s.UpdateService)
+		serviceGroup.DELETE("/:id", middleware.RequiredRole(middleware.Admin), s.DeleteService)
 
 	}
 }

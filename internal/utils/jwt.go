@@ -20,7 +20,7 @@ type JWT struct {
 
 type Claims struct {
 	UserID uint   `json:"user_id"`
-	Group  string `json:"group"`
+	Role   string `json:"role"`
 	jwt.StandardClaims
 }
 
@@ -38,7 +38,7 @@ func GetClaimsFormContext(c *gin.Context) (*Claims, bool) {
 
 func MustGetClaimsFormContext(c *gin.Context) (*Claims, bool) {
 	claims, ok := GetClaimsFormContext(c)
-	if !ok || claims == nil || claims.UserID == 0 || claims.Group == "" {
+	if !ok || claims == nil || claims.UserID == 0 || claims.Role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized", "errorCode": http.StatusUnauthorized})
 		return nil, false
 	}
@@ -50,11 +50,7 @@ func SetClaimsToContext(c *gin.Context, claims *Claims) {
 }
 
 func (c *Claims) SessionKey() string {
-	return fmt.Sprintf("%s:%d", c.Group, c.UserID)
-}
-
-func (c *Claims) IsAdmin() bool {
-	return c.Group == "admin"
+	return fmt.Sprintf("%s:%d", c.Role, c.UserID)
 }
 
 var one sync.Once
@@ -74,11 +70,11 @@ func (j *JWT) GenerateToken(userID uint) (string, error) {
 	return j.GenerateTokenWithGroup(userID, "user")
 }
 
-func (j *JWT) GenerateTokenWithGroup(userID uint, group string) (string, error) {
-	return j.GenerateTokenWithExpire(userID, group, j.expire)
+func (j *JWT) GenerateTokenWithGroup(userID uint, role string) (string, error) {
+	return j.GenerateTokenWithExpire(userID, role, j.expire)
 }
 
-func (j *JWT) GenerateTokenWithExpire(userID uint, group string, expire time.Duration) (string, error) {
+func (j *JWT) GenerateTokenWithExpire(userID uint, role string, expire time.Duration) (string, error) {
 	nowTime := time.Now()
 	if expire <= 5*time.Second {
 		expire = 7 * 24 * time.Hour
@@ -87,7 +83,7 @@ func (j *JWT) GenerateTokenWithExpire(userID uint, group string, expire time.Dur
 
 	claims := Claims{
 		UserID: userID,
-		Group:  group,
+		Role:   role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			IssuedAt:  nowTime.Unix(),
@@ -108,5 +104,9 @@ func (j *JWT) ParseToken(token string) (*Claims, error) {
 	if tokenClaims == nil || !tokenClaims.Valid {
 		return nil, fmt.Errorf("invalid token")
 	}
-	return tokenClaims.Claims.(*Claims), nil
+	claims, ok := tokenClaims.Claims.(*Claims)
+	if claims == nil || !ok || claims.UserID == 0 || claims.Role == "" {
+		return nil, fmt.Errorf("invalid token")
+	}
+	return claims, nil
 }

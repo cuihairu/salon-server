@@ -60,11 +60,6 @@ func (c *Context) Id() uint {
 	return c.claims.UserID
 }
 
-func (c *Context) IsAdmin() bool {
-	c.loadClaims()
-	return c.claims.IsAdmin()
-}
-
 func (c *Context) Success(data any) {
 	c.JSON(http.StatusOK, data)
 }

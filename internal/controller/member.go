@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -24,10 +25,10 @@ func NewMemberAPI(memberBiz *biz.MemberBiz, logger *zap.Logger) *MemberAPI {
 func (api *MemberAPI) RegisterRoutes(router *gin.RouterGroup) {
 	memberGroup := router.Group("/members")
 	{
-		memberGroup.GET("/", api.GetAllMembers)
-		memberGroup.GET("/:id", api.GetMemberByID)
-		memberGroup.PUT("/:id", api.UpdateMember)
-		memberGroup.DELETE("/:id", api.DeleteMember)
+		memberGroup.GET("/", middleware.RequiredRole(middleware.User), api.GetAllMembers)
+		memberGroup.GET("/:id", middleware.RequiredRole(middleware.User), api.GetMemberByID)
+		memberGroup.PUT("/:id", middleware.RequiredRole(middleware.User), api.UpdateMember)
+		memberGroup.DELETE("/:id", middleware.RequiredRole(middleware.User), api.DeleteMember)
 	}
 }
 

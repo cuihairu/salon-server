@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -24,11 +25,11 @@ func NewOrderAPI(orderBiz *biz.OrderBiz, logger *zap.Logger) *OrderAPI {
 func (o *OrderAPI) RegisterRoutes(router *gin.RouterGroup) {
 	orderGroup := router.Group("/orders")
 	{
-		orderGroup.GET("/", o.GetAllOrders)
-		orderGroup.GET("/:id", o.GetOrderByID)
-		orderGroup.POST("/", o.CreateOrder)
-		orderGroup.PUT("/:id", o.UpdateOrder)
-		orderGroup.DELETE("/:id", o.DeleteOrder)
+		orderGroup.GET("/", middleware.RequiredRole(middleware.User), o.GetAllOrders)
+		orderGroup.GET("/:id", middleware.RequiredRole(middleware.User), o.GetOrderByID)
+		orderGroup.POST("/", middleware.RequiredRole(middleware.User), o.CreateOrder)
+		orderGroup.PUT("/:id", middleware.RequiredRole(middleware.User), o.UpdateOrder)
+		orderGroup.DELETE("/:id", middleware.RequiredRole(middleware.User), o.DeleteOrder)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
 	"github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -28,11 +29,11 @@ func NewAdminAPI(config *config.Config, adminBiz *biz.AdminBiz, logger *zap.Logg
 func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {
 	adminGroup := router.Group("/admin")
 	{
-		adminGroup.GET("/token/refresh", a.RefreshJwt)
-		adminGroup.POST("/login", a.Login)
-		adminGroup.POST("/logout", a.Logout)
-		adminGroup.POST("/password", a.UpdatePassword)
-		adminGroup.GET("/current", a.Current)
+		adminGroup.GET("/token/refresh", middleware.RequiredRole(middleware.Admin), a.RefreshJwt)
+		adminGroup.POST("/login", middleware.RequiredRole(middleware.Anonymous), a.Login)
+		adminGroup.POST("/logout", middleware.RequiredRole(middleware.Admin), a.Logout)
+		adminGroup.POST("/password", middleware.RequiredRole(middleware.Admin), a.UpdatePassword)
+		adminGroup.GET("/current", middleware.RequiredRole(middleware.Admin), a.Current)
 	}
 }
 

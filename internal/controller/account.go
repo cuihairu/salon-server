@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -24,10 +25,10 @@ func NewAccountAPI(accountBiz *biz.AccountBiz, logger *zap.Logger) *AccountAPI {
 func (a *AccountAPI) RegisterRoutes(router *gin.RouterGroup) {
 	accountGroup := router.Group("/account")
 	{
-		accountGroup.GET("/:id", a.GetAccountInfo)
-		accountGroup.GET("/", a.GetAllAccounts)
-		accountGroup.PUT("/:id", a.UpdateAccount)
-		accountGroup.DELETE("/:id", a.DeleteAccount)
+		accountGroup.GET("/:id", middleware.RequiredRole(middleware.User), a.GetAccountInfo)
+		accountGroup.GET("/", middleware.RequiredRole(middleware.User), a.GetAllAccounts)
+		accountGroup.PUT("/:id", middleware.RequiredRole(middleware.User), a.UpdateAccount)
+		accountGroup.DELETE("/:id", middleware.RequiredRole(middleware.User), a.DeleteAccount)
 	}
 }
 
