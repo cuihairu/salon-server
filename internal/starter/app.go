@@ -3,6 +3,7 @@ package starter
 import (
 	"fmt"
 	config2 "github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -30,6 +31,7 @@ func NewApp(v *viper.Viper) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	middleware.SetLogger(logger)
 	dbConf, err := conf.GetDbConfig()
 	if err != nil {
 		return nil, err

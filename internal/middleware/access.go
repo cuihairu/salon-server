@@ -4,6 +4,7 @@ import (
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -15,9 +16,13 @@ var (
 	subordinate = make(map[string]*Role)
 	Admin       = newAdmin()
 	User        = NewRole("user")
-	Anonymous   = NewRole("anonymous")
+	Anonymous   = NewRole("anonymous") // public url
+	logger      *zap.Logger
 )
 
+func SetLogger(l *zap.Logger) {
+	logger = l
+}
 func GetRole(c *gin.Context) *Role {
 	roleStr, ok := c.Get(ContextRole)
 	if !ok {
@@ -131,12 +136,13 @@ func RequiredRole(requiredRole *Role) gin.HandlerFunc {
 	}
 	return func(c *gin.Context) {
 		// check permission
-		if requiredRole == Anonymous || requiredRole.name == Anonymous.name {
+		if requiredRole.HasPermission(Anonymous) {
 			c.Next()
 			return
 		}
 		claims, ok := utils.GetClaimsFormContext(c)
 		if !ok {
+			logger.Error("unauthorized missing claims", zap.String("path", c.Request.URL.Path))
 			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
 			c.Abort()
 			return
@@ -144,18 +150,21 @@ func RequiredRole(requiredRole *Role) gin.HandlerFunc {
 		session := sessions.Default(c)
 		oldToken := session.Get("token")
 		if oldToken == nil {
+			logger.Error("unauthorized missing old token", zap.String("path", c.Request.URL.Path))
 			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
 			c.Abort()
 			return
 		}
 		oldTokenStr, ok := oldToken.(string)
 		if !ok {
+			logger.Error("unauthorized old token is not string", zap.String("path", c.Request.URL.Path))
 			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
 			c.Abort()
 			return
 		}
 		token := utils.GetHeaderToken(c)
 		if oldTokenStr != token {
+			logger.Error("unauthorized old token is not equal new token", zap.String("path", c.Request.URL.Path))
 			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
 			c.Abort()
 			return
@@ -163,6 +172,7 @@ func RequiredRole(requiredRole *Role) gin.HandlerFunc {
 		// check role
 		curRole := getRoleName(claims.Role)
 		if permission := curRole.HasPermission(requiredRole); !permission {
+			logger.Error("unauthorized forbidden", zap.String("path", c.Request.URL.Path), zap.String("current role", curRole.name), zap.String("required role", requiredRole.name))
 			c.JSON(http.StatusForbidden, gin.H{"errorMessage": "forbidden", "errorCode": http.StatusForbidden})
 			c.Abort()
 			return
