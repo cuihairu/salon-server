@@ -130,20 +130,26 @@ func (a *AdminAPI) Current(c *gin.Context) {
 	var res CurrentRes
 	res.Name = admin.Name
 	res.UserId = fmt.Sprintf("%d", claims.UserID)
-	res.Avatar = "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png"
-	res.Country = "China"
-	res.Signature = "xxxxxxxxxxxx"
-	res.Title = "管理员"
-	res.Access = "admin"
+	res.Avatar = admin.Avatar
+	if admin.Country != nil {
+		res.Country = *admin.Country
+	}
+	res.Signature = admin.Signature
+	res.Title = admin.Title
+	res.Access = admin.Role
 	res.Tags = make([]Tag, 0)
-	res.Tags = append(res.Tags, Tag{Key: "admin", Label: "admin"})
-	res.Group = "admin"
+	if admin.Tags != nil {
+		for _, tag := range *admin.Tags {
+			res.Tags = append(res.Tags, Tag{Key: tag.Key, Label: tag.Label})
+		}
+	}
+	res.Group = admin.Group
 	if admin.Phone != nil {
 		res.Phone = *admin.Phone
 	} else {
 		res.Phone = "13850000000"
 	}
-	res.Address = "浙江省杭州市滨江区"
+	res.Address = admin.Address
 	res.Geographic = Geographic{
 		Province: Province{
 			Key:   "浙江",
@@ -154,7 +160,16 @@ func (a *AdminAPI) Current(c *gin.Context) {
 			Label: "杭州",
 		},
 	}
+	if admin.Geographic != nil {
+		res.Geographic.Province.Key = admin.Geographic.Province.Key
+		res.Geographic.City.Key = admin.Geographic.City.Key
+		res.Geographic.Province.Label = admin.Geographic.Province.Label
+		res.Geographic.City.Label = admin.Geographic.City.Label
+	}
 	res.Email = "admin@example.com"
+	if admin.Email != nil {
+		res.Email = *admin.Email
+	}
 	res.NotifyCount = 10
 	res.UnreadCount = 2
 	ctx.Success(res)
