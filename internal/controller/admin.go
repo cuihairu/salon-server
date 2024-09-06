@@ -54,11 +54,13 @@ type LoginRes struct {
 func (a *AdminAPI) Login(c *gin.Context) {
 	var req LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		a.logger.Error("invalid request", zap.String("path", c.Request.URL.Path), zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"errorMessage": err.Error()})
 		return
 	}
 	token, _, err := a.adminBiz.Auth(req.Username, req.Password)
 	if err != nil {
+		a.logger.Error("login failed", zap.Error(err))
 		c.JSON(http.StatusNotFound, gin.H{"errorMessage": err.Error()})
 		return
 	}
@@ -66,6 +68,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	session.Set("token", token)
 	err = session.Save()
 	if err != nil {
+		a.logger.Error("save session failed", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"errorMessage": err.Error()})
 		return
 	}
@@ -177,7 +180,6 @@ func (a *AdminAPI) Current(c *gin.Context) {
 func (a *AdminAPI) Logout(c *gin.Context) {
 	ctx := utils.NewContext(c)
 	ctx.Session().Clear()
-	ctx.Success(nil)
 	ctx.OK()
 }
 
