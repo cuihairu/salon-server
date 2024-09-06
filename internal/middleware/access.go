@@ -98,11 +98,26 @@ func (r *Role) HasPermission(role *Role) bool {
 	if role == nil {
 		return false
 	}
-	if role == r || role.name == r.name {
+	if r.IsSomeRole(role) {
 		return true
 	}
 	_, ok := r.subordinate[role.name]
 	return ok
+}
+
+func (r *Role) HasPermissionByName(roleName string) bool {
+	role := getRoleName(roleName)
+	return r.HasPermission(role)
+}
+
+func (r *Role) IsSomeRole(role *Role) bool {
+	if role == nil {
+		return false
+	}
+	if role == r || role.name == r.name {
+		return true
+	}
+	return false
 }
 
 func NewRole(name string) *Role {
@@ -136,7 +151,7 @@ func RequiredRole(requiredRole *Role) gin.HandlerFunc {
 	}
 	return func(c *gin.Context) {
 		// check permission
-		if requiredRole.HasPermission(Anonymous) {
+		if requiredRole.IsSomeRole(Anonymous) {
 			c.Next()
 			return
 		}

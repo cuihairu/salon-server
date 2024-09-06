@@ -8,7 +8,6 @@ import (
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type CategoryAPI struct {
@@ -26,35 +25,37 @@ func NewCategoryAPI(categoryBiz *biz.CategoryBiz, logger *zap.Logger) *CategoryA
 func (api *CategoryAPI) RegisterRoutes(router *gin.RouterGroup) {
 	categoryGroup := router.Group("/category")
 	{
-		//categoryGroup.GET("/", api.GetAllCategories)
-		//categoryGroup.GET("/:id", api.GetCategoryByID)
+		categoryGroup.GET("/", middleware.RequiredRole(middleware.User), api.GetAllCategories)
+		categoryGroup.GET("/:id", middleware.RequiredRole(middleware.User), api.GetCategoryByID)
 		categoryGroup.POST("/", middleware.RequiredRole(middleware.Admin), api.CreateCategory)
-		//categoryGroup.PUT("/:id", api.UpdateCategory)
-		//categoryGroup.DELETE("/:id", api.DeleteCategory)
+		categoryGroup.PUT("/:id", middleware.RequiredRole(middleware.Admin), api.UpdateCategory)
+		categoryGroup.DELETE("/:id", middleware.RequiredRole(middleware.Admin), api.DeleteCategory)
 	}
 }
 
 func (api *CategoryAPI) GetAllCategories(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	categories, err := api.categoryBiz.GetAllCategories()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, categories)
+	ctx.Success(categories)
 }
 
 func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	id, err := utils.ParseUintParam[uint](c, "id")
 	if err != nil {
-		//c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.BadRequest(err)
 		return
 	}
 	category, err := api.categoryBiz.GetCategoryByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, category)
+	ctx.Success(category)
 }
 
 type CategoryParams struct {
@@ -105,10 +106,10 @@ func (api *CategoryAPI) UpdateCategory(c *gin.Context) {
 		Description: categoryParams.Description,
 	}
 	if err := api.categoryBiz.UpdateCategory(id, &category); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, category)
+	ctx.Success(category)
 }
 
 func (api *CategoryAPI) DeleteCategory(c *gin.Context) {
