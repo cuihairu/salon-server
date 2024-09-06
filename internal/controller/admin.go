@@ -61,7 +61,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	token, _, err := a.adminBiz.Auth(req.Username, req.Password)
 	if err != nil {
 		a.logger.Error("login failed", zap.Error(err))
-		c.JSON(http.StatusNotFound, gin.H{"errorMessage": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"errorMessage": err.Error()})
 		return
 	}
 	session := sessions.Default(c)

@@ -13,8 +13,9 @@ type ErrorResponse struct {
 }
 
 type RespList struct {
-	Data  any `json:"data"`  // 正常的数据
-	Total int `json:"total"` // 总数 只有让 data 为 List 生效
+	Data    any  `json:"data"`    // 正常的数据
+	Total   int  `json:"total"`   // 总数 只有让 data 为 List 生效
+	Success bool `json:"success"` // 业务上是否请求成功
 }
 
 type Context struct {
@@ -69,7 +70,7 @@ func (c *Context) OK() {
 }
 
 func (c *Context) ReturnList(l any, total int) {
-	c.JSON(http.StatusOK, RespList{Data: l, Total: total})
+	c.JSON(http.StatusOK, RespList{Data: l, Total: total, Success: true})
 }
 
 func (c *Context) Fail(errorCode int, errorMessage string) {

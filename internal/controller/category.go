@@ -33,6 +33,14 @@ func (api *CategoryAPI) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
+type CategoryView struct {
+	Id          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
+}
+
 func (api *CategoryAPI) GetAllCategories(c *gin.Context) {
 	ctx := utils.NewContext(c)
 	categories, err := api.categoryBiz.GetAllCategories()
@@ -40,7 +48,17 @@ func (api *CategoryAPI) GetAllCategories(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(categories)
+	categoryList := make([]CategoryView, 0)
+	for _, category := range categories {
+		categoryList = append(categoryList, CategoryView{
+			Id:          category.ID,
+			Name:        category.Name,
+			Description: category.Description,
+			CreatedAt:   category.Model.CreatedAt.UnixMilli(),
+			UpdatedAt:   category.Model.UpdatedAt.UnixMilli(),
+		})
+	}
+	ctx.ReturnList(categoryList, len(categoryList))
 }
 
 func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {
@@ -82,7 +100,14 @@ func (api *CategoryAPI) CreateCategory(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(category)
+	categoryView := CategoryView{
+		Id:          category.ID,
+		Name:        category.Name,
+		Description: category.Description,
+		CreatedAt:   category.Model.CreatedAt.UnixMilli(),
+		UpdatedAt:   category.Model.UpdatedAt.UnixMilli(),
+	}
+	ctx.Success(categoryView)
 }
 
 func (api *CategoryAPI) UpdateCategory(c *gin.Context) {
@@ -109,7 +134,14 @@ func (api *CategoryAPI) UpdateCategory(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(category)
+	categoryView := CategoryView{
+		Id:          category.ID,
+		Name:        category.Name,
+		Description: category.Description,
+		CreatedAt:   category.Model.CreatedAt.UnixMilli(),
+		UpdatedAt:   category.Model.UpdatedAt.UnixMilli(),
+	}
+	ctx.Success(categoryView)
 }
 
 func (api *CategoryAPI) DeleteCategory(c *gin.Context) {
