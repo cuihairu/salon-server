@@ -73,7 +73,14 @@ func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(category)
+	categoryView := CategoryView{
+		Id:          category.ID,
+		Name:        category.Name,
+		Description: category.Description,
+		CreatedAt:   category.Model.CreatedAt.UnixMilli(),
+		UpdatedAt:   category.Model.UpdatedAt.UnixMilli(),
+	}
+	ctx.Success(categoryView)
 }
 
 type CategoryParams struct {
