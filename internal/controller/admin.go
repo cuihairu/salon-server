@@ -141,8 +141,9 @@ func (a *AdminAPI) Current(c *gin.Context) {
 	res.Title = admin.Title
 	res.Access = admin.Role
 	res.Tags = make([]Tag, 0)
-	if admin.Tags != nil {
-		for _, tag := range *admin.Tags {
+	if admin.Tags.HasValue() {
+		tags := admin.Tags.Data()
+		for _, tag := range *tags {
 			res.Tags = append(res.Tags, Tag{Key: tag.Key, Label: tag.Label})
 		}
 	}
@@ -163,11 +164,12 @@ func (a *AdminAPI) Current(c *gin.Context) {
 			Label: "杭州",
 		},
 	}
-	if admin.Geographic != nil {
-		res.Geographic.Province.Key = admin.Geographic.Province.Key
-		res.Geographic.City.Key = admin.Geographic.City.Key
-		res.Geographic.Province.Label = admin.Geographic.Province.Label
-		res.Geographic.City.Label = admin.Geographic.City.Label
+	if admin.Geographic.HasValue() {
+		geographic := admin.Geographic.Data()
+		res.Geographic.Province.Key = geographic.Province.Key
+		res.Geographic.City.Key = geographic.City.Key
+		res.Geographic.Province.Label = geographic.Province.Label
+		res.Geographic.City.Label = geographic.City.Label
 	}
 	res.Email = "admin@example.com"
 	if admin.Email != nil {

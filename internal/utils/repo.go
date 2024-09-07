@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -9,6 +12,7 @@ type Repository[T any] interface {
 	FindByID(id uint) (*T, error)
 	FindAll() ([]T, error)
 	FindByField(field string, value interface{}) ([]T, error)
+	FindByFields(fields map[string]interface{}) ([]T, error)
 	Update(item *T) error
 	Delete(id uint) error
 	ExecuteInTransaction(txFunc func(tx *gorm.DB) error) error
@@ -52,6 +56,14 @@ func (r *gormRepository[T]) FindByField(field string, value interface{}) ([]T, e
 	return items, nil
 }
 
+func (r *gormRepository[T]) FindByFields(fields map[string]interface{}) ([]T, error) {
+	var items []T
+	if err := r.db.Where(fields).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 func (r *gormRepository[T]) Update(item *T) error {
 	return r.db.Save(item).Error
 }
@@ -73,4 +85,80 @@ func (r *gormRepository[T]) ExecuteInTransaction(txFunc func(tx *gorm.DB) error)
 	}
 
 	return tx.Commit().Error
+}
+
+// JsonField 是一个 json 字段
+type JsonField[T any] struct {
+	data *T
+}
+
+func (g *JsonField[T]) SetData(data *T) {
+	if g != nil && data != nil {
+		*g.data = *data
+	}
+}
+
+func (g *JsonField[T]) Scan(value interface{}) error {
+	if value == nil {
+		g.data = nil
+		return nil
+	}
+	if b, ok := value.([]byte); ok {
+		if len(b) == 0 {
+			g.data = nil
+			return nil
+		}
+		var t T
+		err := json.Unmarshal(b, &t)
+		if err != nil {
+			return err
+		}
+		g.data = &t
+		return nil
+	}
+	return fmt.Errorf("failed to scan Json Field: %v", value)
+}
+
+func (g *JsonField[T]) Value() (driver.Value, error) {
+	if g.data == nil {
+		return nil, nil
+	}
+	return json.Marshal(g.data)
+}
+
+func (g *JsonField[T]) HasValue() bool {
+	return g != nil && g.data != nil
+}
+
+func (g *JsonField[T]) Data() *T {
+	return g.data
+}
+
+func NewJsonField[T any](data *T) *JsonField[T] {
+	return &JsonField[T]{data: data}
+}
+
+func (g *JsonField[T]) MarshalJSON() ([]byte, error) {
+	if g == nil || g.data == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(g.data)
+}
+
+func (g *JsonField[T]) UnmarshalJSON(data []byte) error {
+	if g == nil || len(data) == 0 {
+		return nil
+	}
+	return json.Unmarshal(data, g.data)
+}
+
+func (g *JsonField[T]) String() string {
+	if g == nil || g.data == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", g.data)
+}
+
+func (g *JsonField[T]) IsNil() bool {
+	return g == nil || g.data == nil
 }

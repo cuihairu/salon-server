@@ -42,15 +42,16 @@ func (a *AdminRepository) Create(admin *model.Admin) error {
 	if len(admin.Group) == 0 {
 		admin.Group = "admin"
 	}
-	if admin.Tags == nil {
+	if admin.Tags.IsNil() {
 		tags := model.Tags{model.Tag{Key: "admin", Label: "admin"}}
-		admin.Tags = &tags
+		admin.Tags.SetData(&tags)
 	}
-	if admin.Geographic == nil {
-		admin.Geographic = &model.Geographic{
+	if admin.Geographic.IsNil() {
+		geographic := &model.Geographic{
 			Province: model.Tag{Key: "zhejiang", Label: "zhejiang"},
 			City:     model.Tag{Key: "hangzhou", Label: "hangzhou"},
 		}
+		admin.Geographic.SetData(geographic)
 	}
 	if admin.Email == nil || !utils.IsEmail(*admin.Email) {
 		email := fmt.Sprintf("%s@youngs.fun", admin.Name)
