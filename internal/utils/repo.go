@@ -146,10 +146,16 @@ func (g *JsonField[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (g *JsonField[T]) UnmarshalJSON(data []byte) error {
-	if g == nil || len(data) == 0 {
+	if g == nil || len(data) == 0 || string(data) == "null" {
 		return nil
 	}
-	return json.Unmarshal(data, g.data)
+	var t T
+	err := json.Unmarshal(data, &t)
+	if err != nil {
+		return err
+	}
+	g.data = &t
+	return nil
 }
 
 func (g *JsonField[T]) String() string {
