@@ -34,13 +34,28 @@ func (s *ServiceAPI) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
+type ServiceView struct {
+	Name         string   `json:"name"`
+	CategoryId   uint     `json:"category_id"`
+	CategoryName string   `json:"category_name"`
+	Intro        string   `json:"intro"`
+	Cover        string   `json:"cover"`
+	Images       []string `json:"images"`
+	Description  string   `json:"description"`
+	Duration     int      `json:"duration"`
+	Price        float64  `json:"price"`
+	Amount       float64  `json:"amount"`
+	Recommend    bool     `json:"recommend"`
+}
+
 func (s *ServiceAPI) GetAllServices(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	services, err := s.serviceBiz.GetAllServices()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, services)
+	ctx.Success(services)
 }
 
 func (s *ServiceAPI) GetServicesByID(c *gin.Context) {
@@ -57,16 +72,17 @@ func (s *ServiceAPI) GetServicesByID(c *gin.Context) {
 }
 
 func (s *ServiceAPI) CreateService(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	var service model.Service
 	if err := c.BindJSON(&service); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.BadRequest(err)
 		return
 	}
 	if err := s.serviceBiz.CreateService(&service); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, service)
+	ctx.Success(service)
 }
 
 func (s *ServiceAPI) UpdateService(c *gin.Context) {

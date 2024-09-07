@@ -12,10 +12,11 @@ type ServiceBiz struct {
 	logger       *zap.Logger
 }
 
-func NewServiceBiz(serviceRepo *data.ServiceRepository, logger *zap.Logger) *ServiceBiz {
+func NewServiceBiz(serviceRepo *data.ServiceRepository, categoryRepo *data.CategoryRepository, logger *zap.Logger) *ServiceBiz {
 	return &ServiceBiz{
-		serviceRepo: serviceRepo,
-		logger:      logger,
+		serviceRepo:  serviceRepo,
+		categoryRepo: categoryRepo,
+		logger:       logger,
 	}
 }
 

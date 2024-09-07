@@ -97,11 +97,14 @@ type JsonField[T any] struct {
 
 func (g *JsonField[T]) SetData(data *T) {
 	if g != nil && data != nil {
-		*g.data = *data
+		g.data = data
 	}
 }
 
 func (g *JsonField[T]) Scan(value interface{}) error {
+	if g == nil {
+		return nil
+	}
 	if value == nil {
 		g.data = nil
 		return nil
@@ -123,7 +126,7 @@ func (g *JsonField[T]) Scan(value interface{}) error {
 }
 
 func (g *JsonField[T]) Value() (driver.Value, error) {
-	if g.data == nil {
+	if g == nil || g.data == nil {
 		return nil, nil
 	}
 	return json.Marshal(g.data)

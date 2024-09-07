@@ -1,17 +1,23 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"github.com/cuihairu/salon/internal/utils"
+	"gorm.io/gorm"
+)
+
+type Images []string
 
 type Service struct {
 	gorm.Model
-	Name         string   `gorm:"unique;index:name_idx" json:"name"`
-	CategoryId   uint     `gorm:"index:category_idx" json:"category_id"`
-	CategoryName string   `gorm:"-" json:"category_name"` // 关联 Category
-	Intro        string   `json:"intro"`
-	Cover        string   `json:"cover"`                    // 封面图片
-	Images       []string `gorm:"type:jsonb" json:"images"` // 详情图片
-	Description  string   `json:"description"`
-	Duration     int      `json:"duration"`           // 分钟
-	Price        float64  `gorm:"type:decimal(10,2)"` // 显示价格
-	Amount       float64  `gorm:"type:decimal(10,2)"` // 当前售价
+	Name         string                  `gorm:"unique;index:name_idx" json:"name"`
+	CategoryId   uint                    `gorm:"index:category_idx" json:"category_id"`
+	CategoryName string                  `gorm:"-" json:"category_name"` // 关联 Category
+	Intro        string                  `json:"intro"`
+	Cover        string                  `json:"cover"`                    // 封面图片
+	Images       utils.JsonField[Images] `gorm:"type:jsonb" json:"images"` // 详情图片
+	Description  string                  `json:"description"`
+	Duration     int                     `json:"duration"`           // 分钟
+	Price        float64                 `gorm:"type:decimal(10,2)"` // 显示价格
+	Amount       float64                 `gorm:"type:decimal(10,2)"` // 当前售价
+	Recommend    bool                    `json:"recommend"`          // 是否推荐
 }

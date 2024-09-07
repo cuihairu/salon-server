@@ -34,7 +34,7 @@ func NewApiRouter(config *config.Config, router *gin.Engine, db *gorm.DB, jwtSer
 	categoryApi := controller.NewCategoryAPI(categoryBiz, logger)
 	categoryApi.RegisterRoutes(apiGroup)
 	// service
-	serviceBiz := biz.NewServiceBiz(data.ServiceRepo, logger)
+	serviceBiz := biz.NewServiceBiz(data.ServiceRepo, data.CategoryRepo, logger)
 	serviceApi := controller.NewServiceAPI(serviceBiz, logger)
 	serviceApi.RegisterRoutes(apiGroup)
 	// account
