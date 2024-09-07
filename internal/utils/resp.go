@@ -22,21 +22,58 @@ type Context struct {
 	*gin.Context
 	claims  *Claims
 	session sessions.Session
+	token   *string
 }
 
 func NewContext(c *gin.Context) *Context {
 	return &Context{
 		Context: c,
+		session: sessions.Default(c),
 	}
 }
 
 func (c *Context) Session() sessions.Session {
-	if c.session != nil {
-		return c.session
-	}
-	session := sessions.Default(c.Context)
-	c.session = session
 	return c.session
+}
+
+func (c *Context) ClearSession() {
+	session := sessions.Default(c.Context)
+	session.Clear()
+}
+
+func (c *Context) SetSession(key string, value any) error {
+	c.Session().Set(key, value)
+	return c.session.Save()
+}
+
+func (c *Context) GetSession(key string) any {
+	return c.session.Get(key)
+}
+
+func (c *Context) SetToken(token string) error {
+	c.token = &token
+	err := c.SetSession("token", token)
+	if err != nil {
+		c.ServerError(err)
+	}
+	SetHeaderToken(c.Context, token)
+	return nil
+}
+
+func (c *Context) GetToken() string {
+	if c.token != nil {
+		return *c.token
+	}
+	tokenObj := c.session.Get("token")
+	if tokenObj == nil {
+		return ""
+	}
+	token, ok := tokenObj.(string)
+	if !ok {
+		token = ""
+	}
+	c.token = &token
+	return token
 }
 
 func (c *Context) loadClaims() {
@@ -59,6 +96,11 @@ func (c *Context) Claims() (*Claims, bool) {
 func (c *Context) Id() uint {
 	c.loadClaims()
 	return c.claims.UserID
+}
+
+func (c *Context) Role() string {
+	c.loadClaims()
+	return c.claims.Role
 }
 
 func (c *Context) Success(data any) {

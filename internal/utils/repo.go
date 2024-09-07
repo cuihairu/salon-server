@@ -65,7 +65,10 @@ func (r *gormRepository[T]) FindByFields(fields map[string]interface{}) ([]T, er
 }
 
 func (r *gormRepository[T]) Update(item *T) error {
-	return r.db.Save(item).Error
+	if item == nil {
+		return fmt.Errorf("item is nil")
+	}
+	return r.db.Updates(item).Error
 }
 
 func (r *gormRepository[T]) Delete(id uint) error {

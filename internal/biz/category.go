@@ -32,6 +32,9 @@ func (c *CategoryBiz) CreateCategory(category *model.Category) error {
 }
 
 func (c *CategoryBiz) UpdateCategory(id uint, category *model.Category) error {
+	if category == nil {
+		return fmt.Errorf("category is nil")
+	}
 	preCategory, err := c.categoryRepo.FindByID(id)
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func (c *CategoryBiz) UpdateCategory(id uint, category *model.Category) error {
 	if preCategory == nil {
 		return fmt.Errorf("category not found")
 	}
-	category.ID = id
+	category.Model = preCategory.Model
 	return c.categoryRepo.Update(category)
 }
 

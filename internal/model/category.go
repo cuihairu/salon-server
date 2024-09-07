@@ -10,10 +10,14 @@ type Category struct {
 	Description string `json:"description"`
 }
 
-func (c *Category) overwriting(other *Category) {
+func (c *Category) Overwriting(other *Category) {
 	if other == nil {
 		return
 	}
-	c.Name = other.Name
-	c.Description = other.Description
+	if other.Name != "" {
+		c.Name = other.Name
+	}
+	if other.Description != "" {
+		c.Description = other.Description
+	}
 }

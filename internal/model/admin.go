@@ -1,8 +1,6 @@
 package model
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/cuihairu/salon/internal/utils"
 	"gorm.io/gorm"
 )
@@ -17,20 +15,6 @@ type Tags []Tag
 type Geographic struct {
 	Province Tag `json:"province"`
 	City     Tag `json:"city"`
-}
-
-func (g *Geographic) Scan(value interface{}) error {
-	if b, ok := value.([]byte); ok {
-		return json.Unmarshal(b, g)
-	}
-	return fmt.Errorf("failed to scan geographic: %v", value)
-}
-
-func (t *Tags) Scan(value interface{}) error {
-	if b, ok := value.([]byte); ok {
-		return json.Unmarshal(b, t)
-	}
-	return fmt.Errorf("failed to scan geographic: %v", value)
 }
 
 type Admin struct {

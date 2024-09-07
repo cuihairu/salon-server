@@ -6,10 +6,8 @@ import (
 	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/utils"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type AdminAPI struct {
@@ -29,7 +27,7 @@ func NewAdminAPI(config *config.Config, adminBiz *biz.AdminBiz, logger *zap.Logg
 func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {
 	adminGroup := router.Group("/admin")
 	{
-		adminGroup.GET("/token/refresh", middleware.RequiredRole(middleware.Admin), a.RefreshJwt)
+		adminGroup.GET("/token/refresh", middleware.RequiredRole(middleware.Admin), a.RefreshToken)
 		adminGroup.POST("/login", middleware.RequiredRole(middleware.Anonymous), a.Login)
 		adminGroup.POST("/logout", middleware.RequiredRole(middleware.Admin), a.Logout)
 		adminGroup.POST("/password", middleware.RequiredRole(middleware.Admin), a.UpdatePassword)
@@ -53,32 +51,28 @@ type LoginRes struct {
 
 func (a *AdminAPI) Login(c *gin.Context) {
 	var req LoginReq
+	ctx := utils.NewContext(c)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		a.logger.Error("invalid request", zap.String("path", c.Request.URL.Path), zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"errorMessage": err.Error()})
+		ctx.BadRequest(err)
 		return
 	}
 	token, _, err := a.adminBiz.Auth(req.Username, req.Password)
 	if err != nil {
 		a.logger.Error("login failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"errorMessage": err.Error()})
+		ctx.BadRequest(err)
 		return
 	}
-	session := sessions.Default(c)
-	session.Set("token", token)
-	err = session.Save()
-	if err != nil {
+	if err = ctx.SetToken(token); err != nil {
 		a.logger.Error("save session failed", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"errorMessage": err.Error()})
 		return
 	}
-	utils.SetHeaderToken(c, token)
 	var res LoginRes
 	res.Token = token
 	res.CurrentAuthority = "admin"
 	res.Type = "account"
 	res.Status = "ok"
-	c.JSON(http.StatusOK, res)
+	ctx.Success(res)
 }
 
 type Tag struct {
@@ -185,25 +179,29 @@ func (a *AdminAPI) Logout(c *gin.Context) {
 	ctx.OK()
 }
 
-func (a *AdminAPI) RefreshJwt(c *gin.Context) {
+type RefreshTokenRes struct {
+	Token string `json:"token"`
+}
+
+func (a *AdminAPI) RefreshToken(c *gin.Context) {
 	ctx := utils.NewContext(c)
 	claims, ok := ctx.Claims()
 	if !ok {
 		return
 	}
-	jwt, err := a.adminBiz.RefreshJwt(claims.UserID)
+	jwt, err := a.adminBiz.RefreshToken(claims.UserID)
 	if err != nil {
 		ctx.ServerError(err)
 		return
 	}
-	session := sessions.Default(c)
-	session.Set("token", jwt)
-	err = session.Save()
-	if err != nil {
+	if err = ctx.SetToken(jwt); err != nil {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(gin.H{"token": jwt})
+	res := RefreshTokenRes{
+		Token: jwt,
+	}
+	ctx.Success(res)
 }
 
 type UpdatePasswordReq struct {

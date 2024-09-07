@@ -25,7 +25,7 @@ func NewAdminBiz(config *config.Config, jwtService *utils.JWT, adminRepo *data.A
 	}
 }
 
-func (a *AdminBiz) RefreshJwt(id uint) (string, error) {
+func (a *AdminBiz) RefreshToken(id uint) (string, error) {
 	admin, err := a.adminRepo.FindByID(id)
 	if err != nil {
 		return "", err
