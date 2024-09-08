@@ -3,10 +3,8 @@ package starter
 import (
 	"github.com/cuihairu/salon/internal/config"
 	"github.com/fvbock/endless"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -22,25 +20,23 @@ type HttpServer struct {
 	server Server
 	logger *zap.Logger
 	config *config.Config
+	app    *App
 }
 
-func NewHttpServer(config *config.Config, db *gorm.DB, redisStore redis.Store, logger *zap.Logger) (*HttpServer, error) {
-	serverConfig, err := config.GetServerConfig()
+func NewHttpServer(app *App) (*HttpServer, error) {
+	serverConfig, err := app.Config.GetServerConfig()
 	if err != nil {
 		return nil, err
 	}
-	router, err := NewRouter(config, db, redisStore, logger)
-	if err != nil {
-		return nil, err
-	}
-	server := endless.NewServer(serverConfig.Address, router)
+	server := endless.NewServer(serverConfig.Address, app.Engine)
 	server.ReadTimeout = 10 * time.Second
 	server.WriteTimeout = 10 * time.Second
 	server.MaxHeaderBytes = 1 << 23
 	return &HttpServer{
+		app:    app,
 		server: server,
-		logger: logger,
-		config: config,
+		logger: app.Logger,
+		config: app.Config,
 	}, nil
 }
 

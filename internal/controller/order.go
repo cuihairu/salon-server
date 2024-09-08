@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
@@ -15,11 +16,10 @@ type OrderAPI struct {
 	logger   *zap.Logger
 }
 
-func NewOrderAPI(orderBiz *biz.OrderBiz, logger *zap.Logger) *OrderAPI {
-	return &OrderAPI{
-		orderBiz: orderBiz,
-		logger:   logger,
-	}
+func (o *OrderAPI) Initialize(config *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	o.orderBiz = bizStore.OrderBiz
+	o.logger = logger
+	return nil
 }
 
 func (o *OrderAPI) RegisterRoutes(router *gin.RouterGroup) {

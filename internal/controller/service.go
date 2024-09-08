@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
@@ -13,6 +14,12 @@ import (
 type ServiceAPI struct {
 	serviceBiz *biz.ServiceBiz
 	logger     *zap.Logger
+}
+
+func (s *ServiceAPI) Initialize(config *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	s.serviceBiz = bizStore.ServiceBiz
+	s.logger = logger
+	return nil
 }
 
 func NewServiceAPI(serviceBiz *biz.ServiceBiz, logger *zap.Logger) *ServiceAPI {

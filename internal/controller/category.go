@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
@@ -15,11 +16,10 @@ type CategoryAPI struct {
 	logger      *zap.Logger
 }
 
-func NewCategoryAPI(categoryBiz *biz.CategoryBiz, logger *zap.Logger) *CategoryAPI {
-	return &CategoryAPI{
-		categoryBiz: categoryBiz,
-		logger:      logger,
-	}
+func (api *CategoryAPI) Initialize(conf *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	api.categoryBiz = bizStore.CategoryBiz
+	api.logger = logger
+	return nil
 }
 
 func (api *CategoryAPI) RegisterRoutes(router *gin.RouterGroup) {

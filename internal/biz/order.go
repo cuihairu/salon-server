@@ -11,9 +11,9 @@ type OrderBiz struct {
 	logger    *zap.Logger
 }
 
-func NewOrderBiz(orderRepo *data.OrderRepository, logger *zap.Logger) *OrderBiz {
+func NewOrderBiz(dataStore *data.DataStore, logger *zap.Logger) *OrderBiz {
 	return &OrderBiz{
-		orderRepo: orderRepo,
+		orderRepo: dataStore.OrderRepo,
 		logger:    logger,
 	}
 }

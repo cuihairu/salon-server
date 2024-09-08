@@ -12,9 +12,9 @@ type CategoryBiz struct {
 	logger       *zap.Logger
 }
 
-func NewCategoryBiz(categoryRepo *data.CategoryRepository, logger *zap.Logger) *CategoryBiz {
+func NewCategoryBiz(dataStore *data.DataStore, logger *zap.Logger) *CategoryBiz {
 	return &CategoryBiz{
-		categoryRepo: categoryRepo,
+		categoryRepo: dataStore.CategoryRepo,
 		logger:       logger,
 	}
 }

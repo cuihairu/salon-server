@@ -14,10 +14,10 @@ type AuthBiz struct {
 	jwtService *utils.JWT
 }
 
-func NewAuthBiz(config *config.Config, jwtService *utils.JWT, userRepo *data.UserRepository, logger *zap.Logger) *AuthBiz {
+func NewAuthBiz(config *config.Config, jwtService *utils.JWT, dataStore *data.DataStore, logger *zap.Logger) *AuthBiz {
 	return &AuthBiz{
 		config:     config,
-		userRepo:   userRepo,
+		userRepo:   dataStore.UserRepo,
 		logger:     logger,
 		jwtService: jwtService,
 	}

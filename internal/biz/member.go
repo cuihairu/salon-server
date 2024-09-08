@@ -11,9 +11,9 @@ type MemberBiz struct {
 	logger     *zap.Logger
 }
 
-func NewMemberBiz(memberRepo *data.MemberRepository, logger *zap.Logger) *MemberBiz {
+func NewMemberBiz(dataStore *data.DataStore, logger *zap.Logger) *MemberBiz {
 	return &MemberBiz{
-		memberRepo: memberRepo,
+		memberRepo: dataStore.MemberRepo,
 		logger:     logger,
 	}
 }

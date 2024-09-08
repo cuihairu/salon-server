@@ -16,13 +16,12 @@ type AuthAPI struct {
 	config  *config.Config
 }
 
-func NewAuthAPI(config *config.Config, userBiz *biz.UserBiz, authBiz *biz.AuthBiz, logger *zap.Logger) *AuthAPI {
-	return &AuthAPI{
-		userBiz: userBiz,
-		authBiz: authBiz,
-		logger:  logger,
-		config:  config,
-	}
+func (api *AuthAPI) Initialize(conf *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	api.config = conf
+	api.userBiz = bizStore.UserBiz
+	api.authBiz = bizStore.AuthBiz
+	api.logger = logger
+	return nil
 }
 
 func (api *AuthAPI) RegisterRoutes(router *gin.RouterGroup) {

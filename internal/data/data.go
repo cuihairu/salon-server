@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Data struct {
+type DataStore struct {
 	db           *gorm.DB
 	UserRepo     *UserRepository
 	AccountRepo  *AccountRepository
@@ -20,12 +20,12 @@ type Data struct {
 	logger       *zap.Logger
 }
 
-func (d *Data) AutoMigrate() error {
+func (d *DataStore) AutoMigrate() error {
 	return d.db.AutoMigrate(&model.User{}, &model.Account{}, &model.Member{}, &model.Order{}, &model.Category{}, &model.Service{}, &model.Admin{})
 }
 
-func NewData(db *gorm.DB, conf *config.Config, logger *zap.Logger) (*Data, error) {
-	data := &Data{
+func NewDataStore(db *gorm.DB, conf *config.Config, logger *zap.Logger) (*DataStore, error) {
+	data := &DataStore{
 		db:           db,
 		UserRepo:     NewUserRepository(db),
 		AccountRepo:  NewAccountRepository(db),

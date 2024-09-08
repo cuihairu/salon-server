@@ -2,8 +2,13 @@ package starter
 
 import (
 	"fmt"
-	config2 "github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/biz"
+	config "github.com/cuihairu/salon/internal/config"
+	"github.com/cuihairu/salon/internal/data"
 	"github.com/cuihairu/salon/internal/middleware"
+	"github.com/cuihairu/salon/internal/utils"
+	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -11,15 +16,21 @@ import (
 )
 
 type App struct {
-	config     *config2.Config
-	db         *gorm.DB
-	logger     *zap.Logger
-	lock       sync.RWMutex
-	httpServer *HttpServer
+	Config       *config.Config
+	DB           *gorm.DB
+	DataStore    *data.DataStore
+	BizStore     *biz.BizStore
+	RedisStore   redis.Store
+	routers      []APIRouter
+	Logger       *zap.Logger
+	TokenService *utils.JWT
+	Engine       *gin.Engine
+	lock         sync.RWMutex
+	httpServer   *HttpServer
 }
 
 func NewApp(v *viper.Viper) (*App, error) {
-	conf, err := config2.New(v)
+	conf, err := config.New(v)
 	if err != nil {
 		return nil, err
 	}
@@ -44,17 +55,37 @@ func NewApp(v *viper.Viper) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	redis, err := NewRedis(redisConfig)
+	redisStore, err := NewRedis(redisConfig)
 	if err != nil {
 		return nil, err
 	}
-	app := &App{
-		config: conf,
-		logger: logger,
-		db:     database,
+	dataRepo, err := data.NewDataStore(database, conf, logger)
+	if err != nil {
+		return nil, err
 	}
-	app.httpServer, err = NewHttpServer(conf, database, redis, logger)
+	jwtConfig := conf.GetJwtConfig()
+	jwtService := utils.NewJWT(jwtConfig.SecretKey, jwtConfig.Expire)
+	bizStore := biz.NewBizStore(conf, dataRepo, jwtService, logger)
+
+	app := &App{
+		Config:       conf,
+		Logger:       logger,
+		DB:           database,
+		DataStore:    dataRepo,
+		BizStore:     bizStore,
+		RedisStore:   redisStore,
+		TokenService: jwtService,
+	}
+	_, err = NewRouter(app)
+	if err != nil {
+		return nil, err
+	}
+	app.httpServer, err = NewHttpServer(app)
 	return app, err
+}
+
+func (a *App) AddRouters(routers ...APIRouter) {
+	a.routers = append(a.routers, routers...)
 }
 
 func (a *App) Run() error {

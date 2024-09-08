@@ -16,12 +16,11 @@ type AdminAPI struct {
 	config   *config.Config
 }
 
-func NewAdminAPI(config *config.Config, adminBiz *biz.AdminBiz, logger *zap.Logger) *AdminAPI {
-	return &AdminAPI{
-		adminBiz: adminBiz,
-		logger:   logger,
-		config:   config,
-	}
+func (a *AdminAPI) Initialize(config *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	a.adminBiz = bizStore.AdminBiz
+	a.logger = logger
+	a.config = config
+	return nil
 }
 
 func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {

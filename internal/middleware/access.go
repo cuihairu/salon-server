@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/cuihairu/salon/internal/utils"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -12,17 +13,55 @@ const (
 	ContextRole = "AccessRole"
 )
 
+type Access struct {
+	logger         *zap.Logger
+	getRoleHandler HandlerFunc
+}
+
 var (
 	subordinate = make(map[string]*Role)
 	Admin       = newAdmin()
 	User        = NewRole("user")
 	Anonymous   = NewRole("anonymous") // public url
-	logger      *zap.Logger
+	access      = Access{}
 )
 
-func SetLogger(l *zap.Logger) {
-	logger = l
+type HandlerFunc func(*gin.Context) (*Role, error)
+
+func SetGetRoleHandler(handler HandlerFunc) {
+	access.getRoleHandler = handler
 }
+
+func SetLogger(logger *zap.Logger) {
+	access.logger = logger
+}
+
+var defaultHandler = func(c *gin.Context) (*Role, error) {
+	claims, ok := utils.GetClaimsFormContext(c)
+	var err = fmt.Errorf("unauthorized")
+	if !ok {
+		access.logger.Error("unauthorized missing claims", zap.String("path", c.Request.URL.Path))
+		return nil, err
+	}
+	session := sessions.Default(c)
+	oldToken := session.Get("token")
+	if oldToken == nil {
+		access.logger.Error("unauthorized missing old token", zap.String("path", c.Request.URL.Path))
+		return nil, err
+	}
+	oldTokenStr, ok := oldToken.(string)
+	if !ok {
+		access.logger.Error("unauthorized old token is not string", zap.String("path", c.Request.URL.Path))
+		return nil, err
+	}
+	token := utils.GetHeaderToken(c)
+	if oldTokenStr != token {
+		access.logger.Error("unauthorized old token is not equal new token", zap.String("path", c.Request.URL.Path))
+		return nil, err
+	}
+	return getRoleName(claims.Role), nil
+}
+
 func GetRole(c *gin.Context) *Role {
 	roleStr, ok := c.Get(ContextRole)
 	if !ok {
@@ -149,45 +188,29 @@ func RequiredRole(requiredRole *Role) gin.HandlerFunc {
 	if requiredRole == nil {
 		panic("required role is nil")
 	}
-	return func(c *gin.Context) {
-		// check permission
-		if requiredRole.IsSomeRole(Anonymous) {
+	if access.logger == nil {
+		access.logger = zap.NewNop()
+	}
+	if access.getRoleHandler == nil {
+		access.getRoleHandler = defaultHandler
+	}
+	// public url
+	if requiredRole.IsSomeRole(Anonymous) {
+		return func(c *gin.Context) {
 			c.Next()
 			return
 		}
-		claims, ok := utils.GetClaimsFormContext(c)
-		if !ok {
-			logger.Error("unauthorized missing claims", zap.String("path", c.Request.URL.Path))
-			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
+	}
+	return func(c *gin.Context) {
+		// check permission
+		curRole, err := access.getRoleHandler(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized", "errorCode": http.StatusUnauthorized})
 			c.Abort()
 			return
 		}
-		session := sessions.Default(c)
-		oldToken := session.Get("token")
-		if oldToken == nil {
-			logger.Error("unauthorized missing old token", zap.String("path", c.Request.URL.Path))
-			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
-			c.Abort()
-			return
-		}
-		oldTokenStr, ok := oldToken.(string)
-		if !ok {
-			logger.Error("unauthorized old token is not string", zap.String("path", c.Request.URL.Path))
-			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
-			c.Abort()
-			return
-		}
-		token := utils.GetHeaderToken(c)
-		if oldTokenStr != token {
-			logger.Error("unauthorized old token is not equal new token", zap.String("path", c.Request.URL.Path))
-			c.JSON(http.StatusUnauthorized, gin.H{"errorMessage": "unauthorized"})
-			c.Abort()
-			return
-		}
-		// check role
-		curRole := getRoleName(claims.Role)
 		if permission := curRole.HasPermission(requiredRole); !permission {
-			logger.Error("unauthorized forbidden", zap.String("path", c.Request.URL.Path), zap.String("current role", curRole.name), zap.String("required role", requiredRole.name))
+			access.logger.Error("unauthorized forbidden", zap.String("path", c.Request.URL.Path), zap.String("current role", curRole.name), zap.String("required role", requiredRole.name))
 			c.JSON(http.StatusForbidden, gin.H{"errorMessage": "forbidden", "errorCode": http.StatusForbidden})
 			c.Abort()
 			return

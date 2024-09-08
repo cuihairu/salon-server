@@ -16,9 +16,9 @@ type AdminBiz struct {
 	jwtService *utils.JWT
 }
 
-func NewAdminBiz(config *config.Config, jwtService *utils.JWT, adminRepo *data.AdminRepository, logger *zap.Logger) *AdminBiz {
+func NewAdminBiz(config *config.Config, jwtService *utils.JWT, dataStore *data.DataStore, logger *zap.Logger) *AdminBiz {
 	return &AdminBiz{
-		adminRepo:  adminRepo,
+		adminRepo:  dataStore.AdminRepo,
 		logger:     logger,
 		config:     config,
 		jwtService: jwtService,

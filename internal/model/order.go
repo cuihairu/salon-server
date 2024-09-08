@@ -6,7 +6,7 @@ import (
 )
 
 type OrderService struct {
-	ID       uint    `json:"id"`       // 服务 ID
+	gorm.Model
 	Name     string  `json:"name"`     // 服务名字
 	Duration int     `json:"duration"` // 服务时长
 	Cover    string  `json:"cover"`    // 服务封面

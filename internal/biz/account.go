@@ -13,9 +13,9 @@ type AccountBiz struct {
 	logger      *zap.Logger
 }
 
-func NewAccountBiz(accountRepo *data.AccountRepository, logger *zap.Logger) *AccountBiz {
+func NewAccountBiz(dataStore *data.DataStore, logger *zap.Logger) *AccountBiz {
 	return &AccountBiz{
-		accountRepo: accountRepo,
+		accountRepo: dataStore.AccountRepo,
 		logger:      logger,
 	}
 }
@@ -35,13 +35,7 @@ func (a *AccountBiz) GetAccountInfo(accountId uint) (*model.Account, error) {
 	if user == nil {
 		return nil, fmt.Errorf("user not found")
 	}
-
-	acc = &model.Account{user.ID, 0, 0}
-	err = a.accountRepo.Create(acc)
-	if err != nil {
-		return nil, err
-	}
-	return acc, err
+	return a.accountRepo.FindByID(accountId)
 }
 
 func (a *AccountBiz) GetAllAccounts() ([]model.Account, error) {
@@ -65,20 +59,24 @@ func (a *AccountBiz) CreateAccount(account *model.Account) error {
 	return a.accountRepo.Create(account)
 }
 
-func (a *AccountBiz) UpdateAccount(account *model.Account) error {
+func (a *AccountBiz) UpdateAccount(id uint, account *model.Account) error {
+	if id == 0 {
+		return fmt.Errorf("account id cannot be zero")
+	}
 	if account.Balance < 0 {
 		return fmt.Errorf("balance cannot be negative")
 	}
 	if account.Consumed < 0 {
 		return fmt.Errorf("consumed cannot be negative")
 	}
-	user, err := a.userRepo.FindByID(account.ID)
+	user, err := a.userRepo.FindByID(id)
 	if err != nil {
 		return err
 	}
 	if user == nil {
 		return fmt.Errorf("user not found")
 	}
+	account.ID = id
 	return a.accountRepo.Update(account)
 }
 

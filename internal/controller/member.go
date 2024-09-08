@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/cuihairu/salon/internal/biz"
+	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/middleware"
 	"github.com/cuihairu/salon/internal/model"
 	"github.com/cuihairu/salon/internal/utils"
@@ -15,11 +16,10 @@ type MemberAPI struct {
 	logger    *zap.Logger
 }
 
-func NewMemberAPI(memberBiz *biz.MemberBiz, logger *zap.Logger) *MemberAPI {
-	return &MemberAPI{
-		memberBiz: memberBiz,
-		logger:    logger,
-	}
+func (api *MemberAPI) Initialize(config *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
+	api.memberBiz = bizStore.MemberBiz
+	api.logger = logger
+	return nil
 }
 
 func (api *MemberAPI) RegisterRoutes(router *gin.RouterGroup) {
