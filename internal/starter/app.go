@@ -76,7 +76,7 @@ func NewApp(v *viper.Viper) (*App, error) {
 		RedisStore:   redisStore,
 		TokenService: jwtService,
 	}
-	_, err = NewRouter(app)
+	_, err = NewEngine(app)
 	if err != nil {
 		return nil, err
 	}

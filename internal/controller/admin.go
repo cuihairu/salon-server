@@ -27,7 +27,7 @@ func (a *AdminAPI) RegisterRoutes(router *gin.RouterGroup) {
 	adminGroup := router.Group("/admin")
 	{
 		adminGroup.GET("/token/refresh", middleware.RequiredRole(middleware.Admin), a.RefreshToken)
-		adminGroup.POST("/login", middleware.RequiredRole(middleware.Anonymous), a.Login)
+		adminGroup.POST("/login", a.Login)
 		adminGroup.POST("/logout", middleware.RequiredRole(middleware.Admin), a.Logout)
 		adminGroup.POST("/password", middleware.RequiredRole(middleware.Admin), a.UpdatePassword)
 		adminGroup.GET("/current", middleware.RequiredRole(middleware.Admin), a.Current)

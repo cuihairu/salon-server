@@ -40,7 +40,7 @@ func NewApiRouter(app *App) (*gin.RouterGroup, error) {
 	return apiGroup, nil
 }
 
-func NewRouter(app *App) (*gin.Engine, error) {
+func NewEngine(app *App) (*gin.Engine, error) {
 	// services
 	app.Engine = gin.Default()
 	app.Engine.Use(sessions.Sessions("session", app.RedisStore), middleware.TokenRequired(app.TokenService, app.Logger))

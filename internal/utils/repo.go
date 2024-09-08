@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type Repository[T any] interface {
@@ -110,11 +111,16 @@ func (g *JsonField[T]) Scan(value interface{}) error {
 		return nil
 	}
 	if b, ok := value.([]byte); ok {
+		var t T
 		if len(b) == 0 {
-			g.data = nil
+			g.data = &t
 			return nil
 		}
-		var t T
+		str := strings.TrimSpace(string(b)) // string(b)
+		if str == "{}" || str == "null" || str == "NULL" || str == "[]" {
+			g.data = &t
+			return nil
+		}
 		err := json.Unmarshal(b, &t)
 		if err != nil {
 			return err
@@ -126,8 +132,12 @@ func (g *JsonField[T]) Scan(value interface{}) error {
 }
 
 func (g *JsonField[T]) Value() (driver.Value, error) {
-	if g == nil || g.data == nil {
+	if g == nil {
 		return nil, nil
+	}
+	if g.data == nil {
+		var emptyValue T
+		g.data = &emptyValue
 	}
 	return json.Marshal(g.data)
 }
