@@ -11,13 +11,15 @@ import (
 )
 
 type AdminAPI struct {
-	adminBiz *biz.AdminBiz
-	logger   *zap.Logger
-	config   *config.Config
+	adminBiz        *biz.AdminBiz
+	operationLogBiz *biz.OperationLogBiz
+	logger          *zap.Logger
+	config          *config.Config
 }
 
 func (a *AdminAPI) Initialize(config *config.Config, bizStore *biz.BizStore, logger *zap.Logger) error {
 	a.adminBiz = bizStore.AdminBiz
+	a.operationLogBiz = bizStore.OperationLogBiz
 	a.logger = logger
 	a.config = config
 	return nil
@@ -60,6 +62,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	if err != nil {
 		a.logger.Error("login failed", zap.Error(err))
 		ctx.BadRequest(err)
+		a.operationLogBiz.Log(req.Username, "admin", ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", 1, err.Error())
 		return
 	}
 	if err = ctx.SetToken(token); err != nil {
@@ -72,6 +75,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	res.Type = "account"
 	res.Status = "ok"
 	ctx.Success(res)
+	a.operationLogBiz.Log(req.Username, res.CurrentAuthority, ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", 0, "")
 }
 
 type Tag struct {

@@ -95,6 +95,10 @@ func getRoleName(roleName string) *Role {
 		}
 	}
 }
+
+func GetRoleName(roleName string) *Role {
+	return getRoleName(roleName)
+}
 func SetRoleByName(c *gin.Context, roleName string) {
 	c.Set(ContextRole, getRoleName(roleName))
 }
