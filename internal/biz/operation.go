@@ -17,6 +17,6 @@ func NewOperationLogBiz(dataStore *data.DataStore, logger *zap.Logger) *Operatio
 	}
 }
 
-func (l *OperationLogBiz) Log(username string, role string, ip string, location string, agent string, table string, action string, content string, status int, err string) error {
-	return l.OperationLogRepo.Log(username, role, ip, location, agent, table, action, content, status, err)
+func (l *OperationLogBiz) Log(username string, role string, ip string, location string, agent string, table string, action string, content string, err string) error {
+	return l.OperationLogRepo.Log(username, role, ip, location, agent, table, action, content, err)
 }

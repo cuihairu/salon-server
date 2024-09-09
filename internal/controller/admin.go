@@ -62,7 +62,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	if err != nil {
 		a.logger.Error("login failed", zap.Error(err))
 		ctx.BadRequest(err)
-		a.operationLogBiz.Log(req.Username, "admin", ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", 1, err.Error())
+		a.operationLogBiz.Log(req.Username, "admin", ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", err.Error())
 		return
 	}
 	if err = ctx.SetToken(token); err != nil {
@@ -75,7 +75,7 @@ func (a *AdminAPI) Login(c *gin.Context) {
 	res.Type = "account"
 	res.Status = "ok"
 	ctx.Success(res)
-	a.operationLogBiz.Log(req.Username, res.CurrentAuthority, ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", 0, "")
+	a.operationLogBiz.Log(req.Username, res.CurrentAuthority, ctx.ClientIP(), "", c.Request.UserAgent(), "admin", "login", "", "")
 }
 
 type Tag struct {

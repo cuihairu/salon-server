@@ -58,7 +58,7 @@ func (api *CategoryAPI) GetAllCategories(c *gin.Context) {
 			UpdatedAt:   category.Model.UpdatedAt.UnixMilli(),
 		})
 	}
-	ctx.ReturnList(categoryList, len(categoryList))
+	ctx.Paginated(categoryList, int64(len(categoryList)))
 }
 
 func (api *CategoryAPI) GetCategoryByID(c *gin.Context) {

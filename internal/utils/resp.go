@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type ErrorResponse struct {
@@ -13,14 +14,15 @@ type ErrorResponse struct {
 }
 
 type RespList struct {
-	Data    any  `json:"data"`    // 正常的数据
-	Total   int  `json:"total"`   // 总数 只有让 data 为 List 生效
-	Success bool `json:"success"` // 业务上是否请求成功
+	Data    any   `json:"data"`    // 正常的数据
+	Total   int64 `json:"total"`   // 总数 只有让 data 为 List 生效
+	Success bool  `json:"success"` // 业务上是否请求成功
 }
 
 type Context struct {
 	*gin.Context
 	claims  *Claims
+	paging  *Paging
 	session sessions.Session
 	token   *string
 }
@@ -30,6 +32,35 @@ func NewContext(c *gin.Context) *Context {
 		Context: c,
 		session: sessions.Default(c),
 	}
+}
+
+func (c *Context) Paging() *Paging {
+	if c.paging != nil {
+		return c.paging
+	}
+	p := c.Query("page")
+	if p == "" {
+		c.paging = NewPagingWithDefault()
+		return c.paging
+	}
+	page, err := strconv.Atoi(p)
+	if err != nil {
+		page = 1
+	}
+	s := c.Query("pageSize")
+	if s == "" {
+		c.paging = NewPagingWithPage(page)
+		return c.paging
+	}
+	pageSize, err := strconv.Atoi(s)
+	if err != nil {
+		pageSize = -1
+	}
+	c.paging = &Paging{
+		Page:     page,
+		PageSize: pageSize,
+	}
+	return c.paging
 }
 
 func (c *Context) Session() sessions.Session {
@@ -111,7 +142,7 @@ func (c *Context) OK() {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func (c *Context) ReturnList(l any, total int) {
+func (c *Context) Paginated(l any, total int64) {
 	c.JSON(http.StatusOK, RespList{Data: l, Total: total, Success: true})
 }
 

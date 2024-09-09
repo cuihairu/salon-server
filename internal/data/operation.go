@@ -16,7 +16,7 @@ func NewOperationLogRepository(db *gorm.DB) *OperationLogRepository {
 	}
 }
 
-func (l *OperationLogRepository) Log(username string, role string, ip string, location string, agent string, table string, action string, content string, status int, err string) error {
+func (l *OperationLogRepository) Log(username string, role string, ip string, location string, agent string, table string, action string, content string, err string) error {
 	loginLog := model.OperationLog{
 		Username: username,
 		Role:     role,
@@ -26,7 +26,6 @@ func (l *OperationLogRepository) Log(username string, role string, ip string, lo
 		Table:    table,
 		Action:   action,
 		Content:  content,
-		Status:   status,
 		Err:      err,
 	}
 	return l.Create(&loginLog)

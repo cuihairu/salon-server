@@ -13,5 +13,4 @@ type OperationLog struct {
 	Action   string `gorm:"type:varchar(255);not null" json:"action"`
 	Content  string `gorm:"type:text" json:"content"`
 	Err      string `gorm:"type:text" json:"err"`
-	Status   int    `json:"status"`
 }

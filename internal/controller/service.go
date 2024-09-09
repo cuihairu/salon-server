@@ -33,8 +33,10 @@ func (s *ServiceAPI) RegisterRoutes(router *gin.RouterGroup) {
 	serviceGroup := router.Group("/services")
 	{
 		serviceGroup.GET("/", middleware.RequiredRole(middleware.Admin), s.GetAllServices)
+		serviceGroup.GET("/paging", middleware.RequiredRole(middleware.User), s.GetServicesByPaging)
 		serviceGroup.GET("/:id", middleware.RequiredRole(middleware.Admin), s.GetServicesByID)
 		serviceGroup.POST("/", middleware.RequiredRole(middleware.Admin), s.CreateService)
+		serviceGroup.GET("/category/:id", middleware.RequiredRole(middleware.Admin), s.GetServicesByCategory)
 		serviceGroup.PUT("/:id", middleware.RequiredRole(middleware.Admin), s.UpdateService)
 		serviceGroup.DELETE("/:id", middleware.RequiredRole(middleware.Admin), s.DeleteService)
 
@@ -42,6 +44,9 @@ func (s *ServiceAPI) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 type ServiceView struct {
+	Id           uint     `json:"id"`
+	CreatedAt    int64    `json:"created_at"`
+	UpdatedAt    int64    `json:"updated_at"`
 	Name         string   `json:"name"`
 	CategoryId   uint     `json:"category_id"`
 	CategoryName string   `json:"category_name"`
@@ -55,6 +60,39 @@ type ServiceView struct {
 	Recommend    bool     `json:"recommend"`
 }
 
+func serviceToView(service *model.Service) *ServiceView {
+	images := []string{}
+	if service.Images.HasValue() {
+		for _, v := range *service.Images.Data() {
+			images = append(images, v)
+		}
+	}
+	return &ServiceView{
+		Id:           service.ID,
+		CreatedAt:    service.CreatedAt.UnixMilli(),
+		UpdatedAt:    service.UpdatedAt.UnixMilli(),
+		Name:         service.Name,
+		CategoryId:   service.CategoryId,
+		CategoryName: service.CategoryName,
+		Intro:        service.Intro,
+		Cover:        service.Cover,
+		Images:       images,
+		Description:  service.Description,
+		Duration:     service.Duration,
+		Price:        service.Price,
+		Amount:       service.Amount,
+		Recommend:    service.Recommend,
+	}
+}
+
+func servicesToViews(services []model.Service) []*ServiceView {
+	views := make([]*ServiceView, 0, len(services))
+	for _, v := range services {
+		views = append(views, serviceToView(&v))
+	}
+	return views
+}
+
 func (s *ServiceAPI) GetAllServices(c *gin.Context) {
 	ctx := utils.NewContext(c)
 	services, err := s.serviceBiz.GetAllServices()
@@ -62,12 +100,14 @@ func (s *ServiceAPI) GetAllServices(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(services)
+	ctx.Success(servicesToViews(services))
 }
 
 func (s *ServiceAPI) GetServicesByID(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	id, err := utils.ParseUintParam[uint](c, "id")
 	if err != nil {
+		ctx.BadRequest(err)
 		return
 	}
 	services, err := s.serviceBiz.GetServiceByID(id)
@@ -75,7 +115,7 @@ func (s *ServiceAPI) GetServicesByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, services)
+	ctx.Success(serviceToView(services))
 }
 
 func (s *ServiceAPI) CreateService(c *gin.Context) {
@@ -89,20 +129,21 @@ func (s *ServiceAPI) CreateService(c *gin.Context) {
 		ctx.ServerError(err)
 		return
 	}
-	ctx.Success(service)
+	ctx.Success(serviceToView(&service))
 }
 
 func (s *ServiceAPI) UpdateService(c *gin.Context) {
+	ctx := utils.NewContext(c)
 	var service model.Service
 	if err := c.BindJSON(&service); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.BadRequest(err)
 		return
 	}
 	if err := s.serviceBiz.UpdateService(&service); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.ServerError(err)
 		return
 	}
-	c.JSON(http.StatusOK, service)
+	ctx.Success(serviceToView(&service))
 }
 
 func (s *ServiceAPI) DeleteService(c *gin.Context) {
@@ -115,4 +156,27 @@ func (s *ServiceAPI) DeleteService(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (s *ServiceAPI) GetServicesByCategory(context *gin.Context) {
+	id, err := utils.ParseUintParam[uint](context, "id")
+	if err != nil {
+		return
+	}
+	services, err := s.serviceBiz.GetServicesByCategory(id)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, servicesToViews(services))
+}
+
+func (s *ServiceAPI) GetServicesByPaging(context *gin.Context) {
+	ctx := utils.NewContext(context)
+	services, total, err := s.serviceBiz.GetServicesByPaging(ctx.Paging())
+	if err != nil {
+		ctx.ServerError(err)
+		return
+	}
+	ctx.Paginated(servicesToViews(services), total)
 }

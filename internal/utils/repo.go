@@ -17,25 +17,41 @@ type Repository[T any] interface {
 	Update(item *T) error
 	Delete(id uint) error
 	ExecuteInTransaction(txFunc func(tx *gorm.DB) error) error
+	FindWithPaging(paging *Paging) (*Paginated[T], error)
+}
+
+type Paginated[T any] struct {
+	Total int64
+	List  []T
+}
+
+func (p *Paginated[T]) HasValue() bool {
+	return !p.IsEmpty()
+}
+
+func (p *Paginated[T]) IsEmpty() bool {
+	return p == nil || len(p.List) == 0
 }
 
 // Repository 是 Repository 的实现
 type gormRepository[T any] struct {
-	db *gorm.DB
+	db    *gorm.DB
+	table *gorm.DB
 }
 
 // NewRepository 创建一个新的 gormRepository
 func NewRepository[T any](db *gorm.DB) Repository[T] {
-	return &gormRepository[T]{db: db}
+	var table T
+	return &gormRepository[T]{db: db, table: db.Model(&table)}
 }
 
 func (r *gormRepository[T]) Create(item *T) error {
-	return r.db.Create(item).Error
+	return r.table.Create(item).Error
 }
 
 func (r *gormRepository[T]) FindByID(id uint) (*T, error) {
 	var item T
-	if err := r.db.First(&item, id).Error; err != nil {
+	if err := r.table.First(&item, id).Error; err != nil {
 		return nil, err
 	}
 	return &item, nil
@@ -43,7 +59,7 @@ func (r *gormRepository[T]) FindByID(id uint) (*T, error) {
 
 func (r *gormRepository[T]) FindAll() ([]T, error) {
 	var items []T
-	if err := r.db.Find(&items).Error; err != nil {
+	if err := r.table.Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
@@ -51,7 +67,7 @@ func (r *gormRepository[T]) FindAll() ([]T, error) {
 
 func (r *gormRepository[T]) FindByField(field string, value interface{}) ([]T, error) {
 	var items []T
-	if err := r.db.Where(field+" = ?", value).Find(&items).Error; err != nil {
+	if err := r.table.Where(field+" = ?", value).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
@@ -59,7 +75,7 @@ func (r *gormRepository[T]) FindByField(field string, value interface{}) ([]T, e
 
 func (r *gormRepository[T]) FindByFields(fields map[string]interface{}) ([]T, error) {
 	var items []T
-	if err := r.db.Where(fields).Find(&items).Error; err != nil {
+	if err := r.table.Where(fields).Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
@@ -69,12 +85,12 @@ func (r *gormRepository[T]) Update(item *T) error {
 	if item == nil {
 		return fmt.Errorf("item is nil")
 	}
-	return r.db.Updates(item).Error
+	return r.table.Updates(item).Error
 }
 
 func (r *gormRepository[T]) Delete(id uint) error {
 	var t T
-	return r.db.Delete(&t, id).Error
+	return r.table.Delete(&t, id).Error
 }
 
 func (r *gormRepository[T]) ExecuteInTransaction(txFunc func(tx *gorm.DB) error) error {
@@ -89,6 +105,31 @@ func (r *gormRepository[T]) ExecuteInTransaction(txFunc func(tx *gorm.DB) error)
 	}
 
 	return tx.Commit().Error
+}
+
+func (r *gormRepository[T]) FindWithPaging(paging *Paging) (*Paginated[T], error) {
+	var items []T
+	var total int64
+	if err := r.table.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	if paging == nil {
+		paging = NewPagingWithDefault()
+	} else {
+		if paging.Page <= 0 {
+			paging.Page = 1
+		}
+		if paging.PageSize <= 0 {
+			paging.PageSize = 10
+		}
+	}
+	if err := r.table.Limit(paging.Limit()).Offset(paging.Offset()).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return &Paginated[T]{
+		Total: total,
+		List:  items,
+	}, nil
 }
 
 // JsonField 是一个 json 字段
