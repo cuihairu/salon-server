@@ -8,12 +8,12 @@ import (
 )
 
 func NewZapLogger(zapConfig *zap.Config) (*zap.Logger, error) {
-	err := utils.CreateDirIfNotExist(zapConfig.OutputPaths)
+	err := utils.CreateDirIfNotExist(zapConfig.OutputPaths...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating log dir, %s", err)
 		os.Exit(1)
 	}
-	err = utils.CreateDirIfNotExist(zapConfig.ErrorOutputPaths)
+	err = utils.CreateDirIfNotExist(zapConfig.ErrorOutputPaths...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating error log dir, %s", err)
 		os.Exit(1)

@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
 
-func CreateDirIfNotExist(paths []string) error {
+func CreateDirIfNotExist(paths ...string) error {
 	for _, path := range paths {
 		dir := filepath.Dir(path)
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -57,4 +58,26 @@ func CreateFileIfNotExistInCurPath(dirname string, createFile string) (string, e
 		return testFile, nil
 	}
 	return currentDir, nil
+}
+
+func ListFiles(dir string) ([]string, error) {
+	var files []string
+	// type WalkFunc func(path string, info fs.FileInfo, err error) error
+	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			relativePath, err := filepath.Rel(dir, path)
+			if err != nil {
+				return err
+			}
+			files = append(files, relativePath)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
 }

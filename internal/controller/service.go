@@ -44,29 +44,23 @@ func (s *ServiceAPI) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 type ServiceView struct {
-	Id           uint     `json:"id"`
-	CreatedAt    int64    `json:"created_at"`
-	UpdatedAt    int64    `json:"updated_at"`
-	Name         string   `json:"name"`
-	CategoryId   uint     `json:"category_id"`
-	CategoryName string   `json:"category_name"`
-	Intro        string   `json:"intro"`
-	Cover        string   `json:"cover"`
-	Images       []string `json:"images"`
-	Description  string   `json:"description"`
-	Duration     int      `json:"duration"`
-	Price        float64  `json:"price"`
-	Amount       float64  `json:"amount"`
-	Recommend    bool     `json:"recommend"`
+	Id           uint    `json:"id"`
+	CreatedAt    int64   `json:"created_at"`
+	UpdatedAt    int64   `json:"updated_at"`
+	Name         string  `json:"name"`
+	CategoryId   uint    `json:"category_id"`
+	CategoryName string  `json:"category_name"`
+	Intro        string  `json:"intro"`
+	Cover        string  `json:"cover"`
+	Content      string  `json:"content"`
+	Description  string  `json:"description"`
+	Duration     int     `json:"duration"`
+	Price        float64 `json:"price"`
+	Amount       float64 `json:"amount"`
+	Recommend    bool    `json:"recommend"`
 }
 
 func serviceToView(service *model.Service) *ServiceView {
-	images := []string{}
-	if service.Images.HasValue() {
-		for _, v := range *service.Images.Data() {
-			images = append(images, v)
-		}
-	}
 	return &ServiceView{
 		Id:           service.ID,
 		CreatedAt:    service.CreatedAt.UnixMilli(),
@@ -76,8 +70,7 @@ func serviceToView(service *model.Service) *ServiceView {
 		CategoryName: service.CategoryName,
 		Intro:        service.Intro,
 		Cover:        service.Cover,
-		Images:       images,
-		Description:  service.Description,
+		Content:      service.Content,
 		Duration:     service.Duration,
 		Price:        service.Price,
 		Amount:       service.Amount,

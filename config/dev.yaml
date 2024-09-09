@@ -28,3 +28,9 @@ miniapp:
 
 server:
   address: ":9080"
+
+static:
+  domain: "http://127.0.0.1:9080"
+  url_path: "static"
+  enable_local: true
+  static_path: "static"

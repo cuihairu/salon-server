@@ -5,6 +5,7 @@ import (
 	"github.com/cuihairu/salon/internal/config"
 	"github.com/cuihairu/salon/internal/controller"
 	"github.com/cuihairu/salon/internal/middleware"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,6 +18,7 @@ type APIRouter interface {
 
 func NewApiRouter(app *App) (*gin.RouterGroup, error) {
 	routers := []APIRouter{
+		&controller.StaticAPI{},
 		&controller.AdminAPI{},
 		&controller.UserAPI{},
 		&controller.AuthAPI{},
@@ -40,10 +42,21 @@ func NewApiRouter(app *App) (*gin.RouterGroup, error) {
 	return apiGroup, nil
 }
 
+func StaticRoutes(app *App) error {
+	staticConfig, err := app.Config.GetStaticConfig()
+	if err != nil {
+		return err
+	}
+	if staticConfig.EnableLocal {
+		app.Engine.Static(staticConfig.UrlPath, staticConfig.StaticPath)
+	}
+	return nil
+}
+
 func NewEngine(app *App) (*gin.Engine, error) {
 	// services
 	app.Engine = gin.Default()
-	app.Engine.Use(sessions.Sessions("session", app.RedisStore), middleware.TokenRequired(app.TokenService, app.Logger))
+	app.Engine.Use(gzip.Gzip(gzip.BestSpeed), sessions.Sessions("session", app.RedisStore), middleware.TokenRequired(app.TokenService, app.Logger))
 	if app.Config.IsDev() {
 		gin.SetMode(gin.DebugMode)
 	} else if app.Config.IsTest() {
@@ -51,7 +64,11 @@ func NewEngine(app *App) (*gin.Engine, error) {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	_, err := NewApiRouter(app)
+	err := StaticRoutes(app)
+	if err != nil {
+		return nil, err
+	}
+	_, err = NewApiRouter(app)
 	if err != nil {
 		return nil, err
 	}
