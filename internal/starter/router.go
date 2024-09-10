@@ -19,6 +19,7 @@ type APIRouter interface {
 func NewApiRouter(app *App) (*gin.RouterGroup, error) {
 	routers := []APIRouter{
 		&controller.StaticAPI{},
+		&controller.StatisticsAPI{},
 		&controller.AdminAPI{},
 		&controller.UserAPI{},
 		&controller.AuthAPI{},
