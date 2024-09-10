@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"github.com/cuihairu/salon/internal/utils"
+	"os"
+	"path/filepath"
 )
 
 type StaticConfig struct {
@@ -10,6 +12,18 @@ type StaticConfig struct {
 	UrlPath     string `mapstructure:"url_path" yaml:"url_path" json:"url_path"`
 	EnableLocal bool   `mapstructure:"enable_local" yaml:"enable_local" json:"enable_local"`
 	StaticPath  string `mapstructure:"static_path" yaml:"static_path" json:"static_path"`
+}
+
+func (s *StaticConfig) GetStaticAbsolutePath() (string, error) {
+	if filepath.IsAbs(s.StaticPath) {
+		return s.StaticPath, nil
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	s.StaticPath = filepath.Join(wd, s.StaticPath)
+	return s.StaticPath, nil
 }
 
 func (c *Config) GetStaticConfig() (*StaticConfig, error) {
